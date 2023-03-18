@@ -51,6 +51,8 @@ uniform int uSamplesPerFrame;
 // #define DEBUG_VISIBILITY
 // #define DEBUG_RANDOM
 // #define VISIBILITY_TEST_DIST
+// #define ENABLE_BACKFACE_CULLING
+#define ENABLE_ALPHA_TEST
 #define MOROZ_MYKHAILO_RNG
 #define PIXEL_COORDS_AS_SEED
 #define SAMPLE_LIGHT
@@ -244,6 +246,13 @@ void sampleTriangle(out Intersection isect, out float pdf, in int idx, in vec2 s
 
 void intersectTriangle(in Ray r, inout Intersection isect, in int idx) {
     Triangle tri = bTriangles[idx];
+
+#ifdef ENABLE_BACKFACE_CULLING
+    if (dot(r.d, tri.normal.xyz) > 0) {
+        return;
+    }
+#endif
+
     vec3 pvec = cross(r.d, tri.e02.xyz);
     float det = dot(tri.e01.xyz, pvec);
     // Parallel to triangle.
@@ -285,16 +294,20 @@ void intersectTriangle(in Ray r, inout Intersection isect, in int idx) {
     if (isect.dist < t) return;
 #endif
 
-    isect.uv = tri.vt[0].xy * (1 - u - v) + tri.vt[1].xy * u + tri.vt[2].xy * v;
-    if (int(bMaterials[int(tri.info.w)].info.w) > -1) {
-        float alpha = getDiffuse(int(bMaterials[int(tri.info.w)].info.w), isect.uv).a;
+    vec2 uv = tri.vt[0].xy * (1 - u - v) + tri.vt[1].xy * u + tri.vt[2].xy * v;
+#ifdef ENABLE_ALPHA_TEST
+    int diffuseTexture = int(bMaterials[int(tri.info.w)].info.w);
+    if (diffuseTexture > -1) {
+        float alpha = getDiffuse(diffuseTexture, uv).a;
         if (alpha < 0.5) return;
     }
+#endif
 
     isect.hit = true;
     isect.object = idx;
     isect.dist = t;
     isect.material = int(tri.info.w);
+    isect.uv = uv;
 
     if (r.isShadowRay) {
         return;

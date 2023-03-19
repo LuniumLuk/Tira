@@ -158,7 +158,7 @@ namespace tira {
     colorf TextureEnv::sample(float3 const& coords) const {
         auto uv = direction_to_equirectangular(normalize(coords));
         auto u = uv.u;
-        auto v = uv.v;
+        auto v = 1.0f - uv.v; // Inverse v.
         u *= width;
         v *= height;
         auto x = std::floor(u);

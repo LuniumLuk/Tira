@@ -68,6 +68,7 @@ namespace tira {
 
         /// Envmap ///
         TextureEnv* envmap = nullptr;
+        float envmap_scale = 1.0f;
         void load_envmap(std::string const& path);
 
         /// Sun ///
@@ -75,6 +76,7 @@ namespace tira {
         float3 sun_direction = normalize(float3(-1.f, 1.f, 1.f));
         float sun_solid_angle = 6.87e-2f;
         float3 sun_radiance = { 50.f };
+
 
         float3 sample_sun(float3 const& P, float3 const& N, float3& wi, float& pdf, float& geom) const;
         float3 sample_envmap(float3 const& P, float3 const& N, float3& wi, float& pdf, float& geom) const;

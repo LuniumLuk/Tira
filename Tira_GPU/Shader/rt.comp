@@ -39,13 +39,17 @@ uniform vec3 uSunDirection;
 uniform float uSunSolidAngle;
 uniform vec3 uSunRadiance;
 uniform int uSamplesPerFrame;
+uniform bool uEnableEnvmap;
+uniform float uEnvmapScale;
 
 #define SAMPLE_SUN          0
 #define SAMPLE_AREA_LIGHTS  1
+#define SAMPLE_ENVMAP       2
 
 // #define USE_GEOMETRY_NORMAL
+// #define DEBUG_ENVMAP
 // #define DEBUG_EDGE
-// #define DEBUG_NORMAL
+#define DEBUG_NORMAL
 // #define DEBUG_UV
 // #define DEBUG_DIFFUSE
 // #define DEBUG_VISIBILITY
@@ -56,6 +60,8 @@ uniform int uSamplesPerFrame;
 #define MOROZ_MYKHAILO_RNG
 #define PIXEL_COORDS_AS_SEED
 #define SAMPLE_LIGHT
+
+layout (binding = 30) uniform sampler2D uEnvmap;
 
 #ifdef DEBUG_VISIBILITY
 const int MAX_DEPTH                 = 1;
@@ -112,12 +118,36 @@ vec2 hammersley(in uint i, in uint N) {
     return vec2(float(i) / float(N), float(bits) * tof);
 }
 
+const vec2 INV_ATAN = vec2(0.1591549430918953, 0.3183098861837907);
+
+vec2 directionToEquirectangularUV(in vec3 dir) {
+    vec2 uv = vec2(atan(dir.z, dir.x), asin(dir.y));
+    uv *= INV_ATAN;
+    uv += 0.5;
+    uv.y = 1.0 - uv.y;
+    return uv;
+}
+
+vec3 getEnvmapLight(in vec3 wi) {
+    vec2 uv = directionToEquirectangularUV(wi);
+    return texture(uEnvmap, uv).rgb * uEnvmapScale;
+}
+
 vec3 getCameraRayDir(in int i, in ivec2 pixel, in ivec2 dim) {
     vec2 u = hammersley(uCurrentFrame + i, uSPP);
     float x = (float(pixel.x) + u.x - 0.5) / dim.x * 2 - 1;
     float y = (float(pixel.y) + u.y - 0.5) / dim.y * 2 - 1;
 
     return uScreenToRaster * vec3(x, y, 1);
+}
+
+vec3 sampleUnitHemisphere(vec2 u) {
+    float phi = u.y * TWO_PI;
+    float z = abs(1 - 2 * u.x);
+    float r = sqrt(1 - z * z);
+    float x = r * cos(phi);
+    float y = r * sin(phi);
+    return vec3(x, y, z);
 }
 
 struct Triangle {
@@ -508,6 +538,19 @@ void sampleSun(in vec3 P, in vec3 N, inout Intersection isect, inout vec3 wi, in
     visibility = visibilityTestHit(P, wi);
 }
 
+void sampleEnvmap(in vec3 P, in vec3 N, inout Intersection isect, inout vec3 wi, inout float pdf, inout float visibility, in vec2 seed) {
+#ifdef MOROZ_MYKHAILO_RNG
+    vec2 u = vec2(rand(), rand());
+#else
+    vec2 u = vec2(random(seed.xy), random(seed.yx));
+#endif
+    vec3 dir = sampleUnitHemisphere(u);
+    wi = normalize(localToWorld(dir, N));
+    pdf = INV_TWO_PI;
+
+    visibility = visibilityTestHit(P, wi);
+}
+
 float colorToLuminance(in vec3 color) {
     return 0.3 * color.x + 0.59 * color.y + 0.11 * color.z;
 }
@@ -733,7 +776,7 @@ vec3 evalMaterial(in Material mat, in vec3 wo, in vec3 wi, in vec3 N, in vec2 uv
     }
 }
 
-float balncedHeuristic(float n0, float pdf0, float n1, float pdf1) {
+float balancedHeuristic(float n0, float pdf0, float n1, float pdf1) {
     float f0 = n0 * pdf0;
     float f1 = n1 * pdf1;
     return f0 / (f0 + f1);
@@ -766,9 +809,13 @@ vec3 calculateDirectLight(in int type, in int depth, in Ray ray, in Intersection
         sampleLight(isect.position, isect.normal, isectLight, wi, pdfLight, geom, vec2(isect.position.xy + vec2(depth)));
         Li = bMaterials[isectLight.material].emission.rgb;
     }
-    else {
+    else if (type == SAMPLE_SUN) {
         sampleSun(isect.position, isect.normal, isectLight, wi, pdfLight, geom, vec2(isect.position.xy + vec2(depth)));
         Li = uSunRadiance;
+    }
+    else if (type == SAMPLE_ENVMAP) {
+        sampleEnvmap(isect.position, isect.normal, isectLight, wi, pdfLight, geom, vec2(isect.position.xy + vec2(depth)));
+        Li = getEnvmapLight(wi);
     }
 
     isBlack = dot(Li, Li) < EPSILON;
@@ -778,7 +825,7 @@ vec3 calculateDirectLight(in int type, in int depth, in Ray ray, in Intersection
 
 #ifdef MIS
         pdf = pdfMaterial(bMaterials[isect.material], wo, wi, isect.tangent, isect.bitangent, isect.normal);
-        weight = balncedHeuristic(1.0, pdfLight, 1.0, pdf);
+        weight = powerHeuristic(1.0, pdfLight, 1.0, pdf);
 #endif
 
 #ifdef DEBUG_VISIBILITY
@@ -813,14 +860,19 @@ vec3 calculateDirectLight(in int type, in int depth, in Ray ray, in Intersection
                 Li = bMaterials[isect0.material].emission.rgb;
                 isBlack = false;
             }
-            else if (type == SAMPLE_SUN && !isect0.hit && absDot(uSunDirection, wi) < (1.0 - uSunSolidAngle * TWO_PI)) {
+            else if (type == SAMPLE_SUN && !isect0.hit && absDot(uSunDirection, wi) > (1.0 - uSunSolidAngle * TWO_PI)) {
                 pdfLight = 1.0 / uSunSolidAngle;
                 Li = uSunRadiance;
                 isBlack = false;
             }
+            else if (type == SAMPLE_ENVMAP && !isect0.hit) {
+                pdfLight = INV_TWO_PI;
+                Li = getEnvmapLight(wi);
+                isBlack = false;
+            }
         }
 
-        weight = balncedHeuristic(1.0, pdf, 1.0, pdfLight);
+        weight = powerHeuristic(1.0, pdf, 1.0, pdfLight);
 
         if (!isBlack) {
             Ld += Li * bsdf * weight / pdf;
@@ -864,6 +916,13 @@ void main() {
             Intersection isect = initIntersection();
             intersectBVH(ray, isect);
 
+#ifdef DEBUG_ENVMAP
+            if (!isect.hit) {
+                L += attenuation * getEnvmapLight(ray.d);
+            }
+            break;
+#endif
+
 #ifdef DEBUG_EDGE
             if (isect.hit) {
                 if (dot(isect.normal, -ray.d) < 0) {
@@ -895,6 +954,12 @@ void main() {
 #endif
 
             if (!isect.hit) {
+                if (uEnableSun && absDot(uSunDirection, ray.d) > (1.0 - uSunSolidAngle * TWO_PI)) {
+                    L += attenuation * uSunRadiance;
+                }
+                if (uEnableEnvmap) {
+                    L += attenuation * getEnvmapLight(ray.d);
+                }
                 break;
             }
 
@@ -924,6 +989,8 @@ void main() {
                 L += attenuation * calculateDirectLight(SAMPLE_AREA_LIGHTS, depth, ray, isect, wi, f, pdf, ray.isDelta);
             if (uEnableSun)
                 L += attenuation * calculateDirectLight(SAMPLE_SUN, depth, ray, isect, wi, f, pdf, ray.isDelta);
+            if (uEnableEnvmap)
+                L += attenuation * calculateDirectLight(SAMPLE_ENVMAP, depth, ray, isect, wi, f, pdf, ray.isDelta);
 
             if (pdf > EPSILON && dot(f, f) > EPSILON) {
                 attenuation *= f / pdf;

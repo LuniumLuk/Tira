@@ -223,7 +223,7 @@ namespace tira {
         for (auto& node : doc.children("sphere")) {
             std::string name = node.attribute("mtlname").as_string();
             auto s = new Sphere{};
-            sscanf(node.attribute("center").as_string(), "%f,%f,%f", &s->center.x, &s->center.y, &s->center.z);
+            (sscanf(node.attribute("center").as_string(), "%f,%f,%f", &s->center.x, &s->center.y, &s->center.z));
             s->radius = node.attribute("radius").as_float();
             s->calc_area();
             s->calc_bound();
@@ -268,7 +268,7 @@ namespace tira {
         for (auto& node : doc.children("light")) {
             std::string name = node.attribute("mtlname").as_string();
             float3 radiance;
-            sscanf(node.attribute("radiance").as_string(), "%f,%f,%f", &radiance.x, &radiance.y, &radiance.z);
+            (sscanf(node.attribute("radiance").as_string(), "%f,%f,%f", &radiance.x, &radiance.y, &radiance.z));
             for (auto& m : materials) {
                 if (m->name == name) {
                     m->emissive = true;
@@ -280,7 +280,7 @@ namespace tira {
         // Load envmap specs.
         if (!doc.child("envmap").empty()) {
             load_envmap(doc.child("envmap").attribute("url").as_string());
-
+            envmap_scale = doc.child("envmap").attribute("scale").as_float();
             std::cout << "Using envmap, url: " << doc.child("envmap").attribute("url").as_string() << "\n";
         }
 
@@ -288,9 +288,10 @@ namespace tira {
         if (!doc.child("sunlight").empty()) {
             auto const& node = doc.child("sunlight");
             sun_enabled = true;
-            sscanf(node.attribute("direction").as_string(), "%f,%f,%f", &sun_direction.x, &sun_direction.y, &sun_direction.z);
+            (sscanf(node.attribute("direction").as_string(), "%f,%f,%f", &sun_direction.x, &sun_direction.y, &sun_direction.z));
             sun_direction = normalize(sun_direction);
-            sscanf(node.attribute("radiance").as_string(), "%f,%f,%f", &sun_radiance.x, &sun_radiance.y, &sun_radiance.z);
+            (sscanf(node.attribute("radiance").as_string(), "%f,%f,%f", &sun_radiance.x, &sun_radiance.y, &sun_radiance.z));
+            sun_solid_angle = node.attribute("solidangle").as_float();
 
             std::cout << "Using sunlight, direction: " << sun_direction << ", radiance: " << sun_radiance << "\n";
         }

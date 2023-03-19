@@ -16,6 +16,7 @@
 
 #define DISPLAY_H 720
 #define USE_TILING
+#define MAX_MATERIAL_TEXTURE_COUNT 30
 
 std::string sceneName = "CornellBox-Original";
 std::string generateOutputFilename(int SPP);
@@ -85,6 +86,7 @@ struct App : public Application {
     float mSunSolidAngle;
     glm::vec3 mSunRadiance;
     int mTotalTiles;
+    std::unique_ptr<GL::GLTexture2D> mEnvmap = nullptr;
 };
 
 auto App::init() noexcept -> void {
@@ -125,13 +127,17 @@ auto App::init() noexcept -> void {
 
     // [TODO] Use 2D Texture Array instead.
     std::cout << "[GL] Load " << textures.size() << " textures\n";
-    if (textures.size() > 32) {
-        std::cout << "[GL] Do not support more than 32 textures\n";
+    if (textures.size() > MAX_MATERIAL_TEXTURE_COUNT) {
+        std::cout << "[GL] Do not support more than " << MAX_MATERIAL_TEXTURE_COUNT << " textures\n";
     }
 
     Root::get()->assetManager->LoadShaderProgramCompute("rt_compute_shader", "rt.comp", generateShaderMacros(useMIS, acceptIntersectionCloseToLight, textures.size()));
     Root::get()->assetManager->LoadShaderProgramVF("rt_screen_shader", "screen.vert", "screen.frag");
     Root::get()->assetManager->LoadShaderProgramVF("rt_mix_shader", "screen.vert", "mix.frag");
+
+    if (scene.envmap) {
+        mEnvmap = std::make_unique<GL::GLTexture2D>(scene.envmap->width, scene.envmap->height, GL::InternalFormat::FloatRGB, scene.envmap->data);
+    }
 
     Root::get()->assetManager->LoadTexture2D("rt_sample_counter", imageW, imageH, GL::InternalFormat::FloatRED);
     Root::get()->assetManager->LoadMeshData("rt_quad_mesh", &quadVertices[0], sizeof(quadVertices), { {GL::DataType::Float3}, {GL::DataType::Float2} }, &quadIndices[0], sizeof(quadIndices));
@@ -147,7 +153,7 @@ auto App::init() noexcept -> void {
     for (auto tex : textures) {
         auto tex2D = reinterpret_cast<tira::Texture2D*>(tex);
         mTextures.emplace_back(tex2D->width, tex2D->height, GL::InternalFormat::FloatRGBA, tex2D->data);
-        if (mTextures.size() == 32) break;
+        if (mTextures.size() == MAX_MATERIAL_TEXTURE_COUNT) break;
     }
 
     mCameraPos = {
@@ -196,7 +202,6 @@ auto App::update(double deltaTime) noexcept -> void {
     Root::get()->assetManager->GetFrameBuffer("rt_render_target")->bind();
     FrameBuffer::ClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-#ifdef USE_TILING
     std::vector<Tile> tiles;
     while (tiles.size() < tilesPerFrame && !mTiles.empty()) {
         tiles.push_back(mTiles.top());
@@ -213,7 +218,12 @@ auto App::update(double deltaTime) noexcept -> void {
     Root::get()->assetManager->GetShader("rt_compute_shader")->setFloat("uSunSolidAngle", mSunSolidAngle);
     Root::get()->assetManager->GetShader("rt_compute_shader")->setVec3("uSunRadiance", mSunRadiance);
     Root::get()->assetManager->GetShader("rt_compute_shader")->setInt("uSamplesPerFrame", samplesPerFrame);
+    Root::get()->assetManager->GetShader("rt_compute_shader")->setBool("uEnableEnvmap", mEnvmap != nullptr);
+    Root::get()->assetManager->GetShader("rt_compute_shader")->setFloat("uEnvmapScale", scene.envmap_scale);
     for (int i = 0; i < mTextures.size(); ++i) mTextures[i].bind(i);
+    if (mEnvmap) {
+        mEnvmap->bind(30);
+    }
 
     glBindImageTexture(0, Root::get()->assetManager->GetFrameBuffer("rt_render_target")->colorAttachments[0].handle, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
     glBindImageTexture(1, Root::get()->assetManager->GetTexture("rt_sample_counter")->handle, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
@@ -227,33 +237,9 @@ auto App::update(double deltaTime) noexcept -> void {
     }
     glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
-    for (auto tile : tiles) {
+    for (auto const& tile : tiles) {
         if (tile.SPP < SPP) mTiles.push(tile);
     }
-#else
-    Root::get()->assetManager->GetShader("rt_compute_shader")->use();
-    Root::get()->assetManager->GetShader("rt_compute_shader")->setInt("uSPP", SPP);
-    Root::get()->assetManager->GetShader("rt_compute_shader")->setVec3("uCameraPos", mCameraPos);
-    Root::get()->assetManager->GetShader("rt_compute_shader")->setMat3("uScreenToRaster", mScreenToRaster);
-    Root::get()->assetManager->GetShader("rt_compute_shader")->setFloat("uLightTotalArea", scene.lights_total_area);
-    Root::get()->assetManager->GetShader("rt_compute_shader")->setBool("uEnableSun", mEnableSun);
-    Root::get()->assetManager->GetShader("rt_compute_shader")->setVec3("uSunDirection", mSunDirection);
-    Root::get()->assetManager->GetShader("rt_compute_shader")->setFloat("uSunSolidAngle", mSunSolidAngle);
-    Root::get()->assetManager->GetShader("rt_compute_shader")->setVec3("uSunRadiance", mSunRadiance);
-    Root::get()->assetManager->GetShader("rt_compute_shader")->setInt("uSamplesPerFrame", samplesPerFrame);
-    for (int i = 0; i < mTextures.size(); ++i) mTextures[i].bind(i);
-
-    glBindImageTexture(0, Root::get()->assetManager->GetFrameBuffer("rt_render_target")->colorAttachments[0].handle, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-    glBindImageTexture(1, Root::get()->assetManager->GetTexture("rt_sample_counter")->handle, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
-
-    Root::get()->assetManager->GetShader("rt_compute_shader")->setInt("uCurrentFrame", mCurrentFrame);
-    Root::get()->assetManager->GetShader("rt_compute_shader")->setInt("uOffsetX", 0);
-    Root::get()->assetManager->GetShader("rt_compute_shader")->setInt("uOffsetY", 0);
-    mCurrentFrame += samplesPerFrame;
-    glDispatchCompute(imageW, imageH, 1);
-
-    glMemoryBarrier(GL_ALL_BARRIER_BITS);
-#endif
 
     // Screen Shader
     // Pass #1 mix with present buffer
@@ -294,7 +280,6 @@ auto App::update(double deltaTime) noexcept -> void {
     ImGui::Text((std::string("SPP: ") + std::to_string(SPP)).c_str());
     ImGui::Text((std::to_string(imageW) + "x" + std::to_string(imageH)).c_str());
     ImGui::Text((std::string("FPS: ") + std::to_string(mFPS)).c_str());
-#ifdef USE_TILING
     float tilesPerSecond = mFPS * tiles.size() * samplesPerFrame / SPP;
     ImGui::Text((std::string("Tile size: ") + std::to_string(tileSize)).c_str());
     ImGui::Text((std::string("Samples per frame: ") + std::to_string(samplesPerFrame)).c_str());
@@ -303,18 +288,13 @@ auto App::update(double deltaTime) noexcept -> void {
     ImGui::Text((std::string("Tiles: ") + std::to_string(mTotalTiles - mTiles.size()) + "/" + std::to_string(mTotalTiles)).c_str());
     ImGui::Text((std::string("Tiles/s: ") + std::to_string(tilesPerSecond)).c_str());
     ImGui::Text((std::string("Estimated time left: ") + std::to_string(mTiles.size() / tilesPerSecond / 60) + "min").c_str());
-#endif
     if (ImGui::Button("Terminate")) {
         terminate();
     }
 
     ImGui::End();
 
-#ifdef USE_TILING
     if (mTiles.empty()) terminate();
-#else
-    if (mCurrentFrame >= SPP) terminate();
-#endif
 }
 
 auto App::quit() noexcept -> void {

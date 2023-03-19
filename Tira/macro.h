@@ -5,6 +5,17 @@
 #ifndef MACRO_H
 #define MACRO_H
 
+#if defined(_MSC_VER)
+// disable type conversion warning
+#pragma warning(disable : 4305)
+#pragma warning(disable : 4244)
+#pragma warning(disable : 4267)
+// sscanf warning
+#pragma warning(disable : 4996)
+// unknown pragma 'GCC'
+#pragma warning(disable : 4068)
+#endif
+
 //// Global Settings.
 
 // ┌─ Enable SIMD acceleration

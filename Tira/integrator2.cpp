@@ -22,7 +22,6 @@ namespace tira {
         ImageFloat buffer(scene.scr_w, scene.scr_h);
 
         timer.reset();
-        bool direct_light;
         for (int s = 0; s < spp; ++s) {
             for (int y = 0; y < image.height; ++y) {
 #ifdef _OPENMP
@@ -97,8 +96,11 @@ namespace tira {
             scene.intersect(ray, isect);
 
             if (!isect.hit) {
+                if (scene.sun_enabled && std::abs(dot(scene.sun_direction, ray.direction) > (1.0f - scene.sun_solid_angle * TWO_PI))) {
+                    L += attenuation * scene.sun_radiance;
+                }
                 if (scene.envmap) {
-                    L += attenuation * scene.envmap->sample(ray.direction);
+                    L += attenuation * scene.envmap->sample(ray.direction) * scene.envmap_scale;
                 }
                 break;
             }
@@ -222,7 +224,7 @@ namespace tira {
             Li = scene.sample_sun(isect.position, isect.normal, wi, light_pdf, geom);
             break;
         case LightType::Envmap:
-            Li = scene.sample_envmap(isect.position, isect.normal, wi, light_pdf, geom);
+            Li = scene.sample_envmap(isect.position, isect.normal, wi, light_pdf, geom) * scene.envmap_scale;
             break;
         }
 
@@ -259,27 +261,29 @@ namespace tira {
                     Ray ray(P, wi);
                     ray.shadow_ray = true;
                     scene.intersect(ray, isect);
-                    if (isect.hit) {
-                        if (isect.material->emissive) {
-                            // Calculate light pdf.
-                            switch (type) {
-                            case LightType::AreaLights: light_pdf = 1 / scene.lights_total_area; break;
-                            case LightType::SunLight: light_pdf = 1 / scene.sun_solid_angle; break;
-                            case LightType::Envmap: light_pdf = INV_TWO_PI; break;
-                            }
-
+                    is_black = true;
+                    switch (type) {
+                    case LightType::AreaLights:
+                        if (isect.hit && isect.material->emissive && dot(wi, isect.normal) < 0) {
                             Li = isect.material->emission;
+                            light_pdf = 1 / scene.lights_total_area;
+                            is_black = false;
                         }
-                        else {
-                            is_black = true;
+                        break;
+                    case LightType::SunLight:
+                        if (!isect.hit && std::abs(dot(scene.sun_direction, wi) > (1.0f - scene.sun_solid_angle * TWO_PI))) {
+                            light_pdf = 1 / scene.sun_solid_angle;
+                            Li = scene.sun_radiance;
+                            is_black = false;
                         }
-                    }
-                    else if (scene.envmap) {
-                        light_pdf = INV_TWO_PI;
-                        Li = scene.envmap->sample(wi);
-                    }
-                    else {
-                        is_black = true;
+                        break;
+                    case LightType::Envmap:
+                        if (!isect.hit) {
+                            light_pdf = INV_TWO_PI;
+                            Li = scene.envmap->sample(wi) * scene.envmap_scale;
+                            is_black = false;
+                        }
+                        break;
                     }
                 }
 

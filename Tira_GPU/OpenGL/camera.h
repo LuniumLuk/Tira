@@ -1,5 +1,10 @@
 #pragma once
 
+#if defined(_MSC_VER)
+// type conversion warning
+#pragma warning(disable : 4305)
+#endif
+
 #include <glm/glm.hpp>
 #include <OpenGL/buffer.h>
 

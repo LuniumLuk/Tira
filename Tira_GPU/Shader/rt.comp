@@ -49,7 +49,7 @@ uniform float uEnvmapScale;
 // #define USE_GEOMETRY_NORMAL
 // #define DEBUG_ENVMAP
 // #define DEBUG_EDGE
-#define DEBUG_NORMAL
+// #define DEBUG_NORMAL
 // #define DEBUG_UV
 // #define DEBUG_DIFFUSE
 // #define DEBUG_VISIBILITY
@@ -860,7 +860,7 @@ vec3 calculateDirectLight(in int type, in int depth, in Ray ray, in Intersection
                 Li = bMaterials[isect0.material].emission.rgb;
                 isBlack = false;
             }
-            else if (type == SAMPLE_SUN && !isect0.hit && absDot(uSunDirection, wi) > (1.0 - uSunSolidAngle * TWO_PI)) {
+            else if (type == SAMPLE_SUN && !isect0.hit && dot(uSunDirection, wi) > (1.0 - uSunSolidAngle * TWO_PI)) {
                 pdfLight = 1.0 / uSunSolidAngle;
                 Li = uSunRadiance;
                 isBlack = false;
@@ -954,7 +954,7 @@ void main() {
 #endif
 
             if (!isect.hit) {
-                if (uEnableSun && absDot(uSunDirection, ray.d) > (1.0 - uSunSolidAngle * TWO_PI)) {
+                if (uEnableSun && dot(uSunDirection, ray.d) > (1.0 - uSunSolidAngle * TWO_PI)) {
                     L += attenuation * uSunRadiance;
                 }
                 if (uEnableEnvmap) {

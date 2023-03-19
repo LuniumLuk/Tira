@@ -1,5 +1,14 @@
 #pragma once
 
+#if defined(_MSC_VER)
+// type conversion warning
+#pragma warning(disable : 4244)
+#pragma warning(disable : 4267)
+#pragma warning(disable : 4305)
+// sscanf warning
+#pragma warning(disable : 4996)
+#endif
+
 #include <string>
 
 namespace GL {

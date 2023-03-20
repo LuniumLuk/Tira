@@ -75,6 +75,7 @@ struct App : public Application {
     glm::vec3 mSunRadiance;
     int mTotalTiles;
     std::unique_ptr<GL::Texture2D> mEnvmap = nullptr;
+    tira::Timer mTimer;
 };
 
 auto App::init() noexcept -> void {
@@ -216,6 +217,7 @@ auto App::update(double deltaTime) noexcept -> void {
     glBindImageTexture(0, Root::get()->assetManager->GetFrameBuffer("rt_render_target")->colorAttachments[0].handle, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
     glBindImageTexture(1, Root::get()->assetManager->GetTexture("rt_sample_counter")->handle, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
 
+    mTimer.update();
     for (auto& tile : tiles) {
         Root::get()->assetManager->GetShader("rt_compute_shader")->setInt("uCurrentFrame", tile.SPP);
         Root::get()->assetManager->GetShader("rt_compute_shader")->setInt("uOffsetX", tile.x);
@@ -224,6 +226,8 @@ auto App::update(double deltaTime) noexcept -> void {
         glDispatchCompute(tile.w / 4, tile.h / 4, 1);
     }
     glMemoryBarrier(GL_ALL_BARRIER_BITS);
+    double duration = mTimer.delta_time();
+
 
     for (auto const& tile : tiles) {
         if (tile.SPP < SPP) mTiles.push(tile);
@@ -281,6 +285,11 @@ auto App::update(double deltaTime) noexcept -> void {
     }
 
     ImGui::End();
+
+    if (duration < 0.05) {
+        samplesPerFrame += 1;
+        tilesPerFrame += 1;
+    }
 
     if (mTiles.empty()) terminate();
 }

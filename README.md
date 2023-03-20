@@ -4,7 +4,7 @@ A Tiny Physically Based Renderer for ZJU Computer Graphics 2022 Course Project
 
 [Course Page](http://10.76.1.181/courses/graphics/2022/) - only available in ZJU internal network
 
-## Rendered Images
+## Gallery
 
 | Model                                                                         | Rendered Image                              | Description                                                   |
 |-------------------------------------------------------------------------------|---------------------------------------------|---------------------------------------------------------------|
@@ -13,10 +13,12 @@ A Tiny Physically Based Renderer for ZJU Computer Graphics 2022 Course Project
 | veach-mis (course)                                                            | ![](./Image/veach-mis_8192.png)             | 8192 SPP, 2560x1440, by RTX 2070s in 3 hours 20 mins.         |
 | [CornellBox-Original](https://casual-effects.com/g3d/data10/index.html#mesh5) | ![](./Image/CornellBox-Original_16384.png)  | 16384 SPP, 2048x2048, by RTX 2070s in 34 mins.                |
 | [CornellBox-Water](https://casual-effects.com/g3d/data10/index.html#mesh5)    | ![](./Image/CornellBox-Water_512.png)       | 512 SPP, 2048x2048, by RTX 2070s in 29 mins.                  |
+| [CornellBox-Sphere](https://casual-effects.com/g3d/data10/index.html#mesh5)   | ![](./Image/CornellBox-Sphere_512.png)      | 512 SPP, 1024x1024, by RTX 2070s.                             |
 | [CornellBox-Oak](https://casual-effects.com/g3d/data10/index.html#mesh37)     | ![](./Image/CornellBox-Oak_64.png)          | 64 SPP, 1024x1024, by RTX 2070s in 5 mins 24 secs.            |
-| [CornellBox-Sphere](https://casual-effects.com/g3d/data10/index.html#mesh5)   | ![](./Image/CornellBox-Sphere_512.png)      | 512 SPP, 1024x1024, by RTX 2070s                              |
 | [sponza](https://casual-effects.com/g3d/data10/index.html#mesh10)             | ![](./Image/sponza_64.png)                  | 64 SPP, 2400x1600, by RTX 2070s in 23 mins (lit by sunlight). |
-| [fireplace_room](https://casual-effects.com/g3d/data10/index.html#mesh13)     | ![](./Image/fireplace_room_512.png)         | 512 SPP, 2400x1600, by RTX 2070s in 4 hours                   |
+| [fireplace_room](https://casual-effects.com/g3d/data10/index.html#mesh13)     | ![](./Image/fireplace_room_512.png)         | 512 SPP, 2400x1600, by RTX 2070s in 4 hours.                  |
+| geometry sets (created by blender)                                            | ![](./Image/Set0_1024.png)                  | 1024 SPP, 2048x2048, by RTX 2070s in 6 mins (lit by sunlight).|
+| geometry sets (created by blender)                                            | ![](./Image/Set0_2048.png)                  | 2048 SPP, 2048x2048, by RTX 2070s in 15 mins (lit by envmap). |
 
 ## Features
 

@@ -707,7 +707,7 @@ void sampleMaterialGlass(in Material mat, in vec3 wo, in vec3 N, out vec3 wi, in
     vec3 normal = backFace ? -N : N;
 
     // [TODO] Apply this to CPU version
-    float cosTheta = min(dot(wo, normal), 1.0);
+    float cosTheta = dot(wo, normal);
     float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
 
     bool cannotRefract = eta * sinTheta > 1.0;
@@ -746,7 +746,14 @@ vec3 evalMaterialBlinnPhong(in Material mat, in vec3 wo, in vec3 wi, in vec3 N, 
 }
 
 vec3 evalMaterialGlass(in Material mat, in vec3 wo, in vec3 wi, in vec3 N, in vec2 uv, in vec3 tangent, in vec3 bitangent) {
-    return mat.transmittance.rgb;
+    float NoL = dot(N, wi);
+    float NoV = dot(N, wo);
+    if (NoL * NoV > 0) {
+        return vec3(1.0);
+    }
+    else {
+        return mat.transmittance.rgb;
+    }
 }
 
 float pdfMaterial(in Material mat, in vec3 wo, in vec3 wi, in vec3 tangent, in vec3 bitangent, in vec3 N) {

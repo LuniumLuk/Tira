@@ -2,7 +2,7 @@
 
 #include <OpenGL/io.h>
 #include <OpenGL/buffer.h>
-#include <OpenGL/gltexture.h>
+#include <OpenGL/texture.h>
 #include <OpenGL/shader.h>
 #include <OpenGL/mesh.h>
 #include <string>
@@ -42,7 +42,7 @@ struct AssetManager {
 public:
     AssetManager();
 
-    static auto GetTexture(std::string const& name) noexcept -> GLTexture* { return singleton->textureLib.getAsset(name); }
+    static auto GetTexture(std::string const& name) noexcept -> Texture* { return singleton->textureLib.getAsset(name); }
     static auto LoadTexture2D(std::string const& name, Filepath const& filename, bool relativePath = true) -> void;
     static auto LoadTexture2D(std::string const& name, size_t width, size_t height, InternalFormat format) -> void;
     static auto LoadCubemap(std::string const& name, std::vector<Filepath> const& paths) -> void;
@@ -65,7 +65,7 @@ public:
 
 private:
     static AssetManager* singleton;
-    AssetLib<GLTexture> textureLib;
+    AssetLib<Texture> textureLib;
     AssetLib<ShaderProgram> shaderLib;
     AssetLib<Mesh> meshLib;
     AssetLib<UniformBuffer> uniformBufferLib;

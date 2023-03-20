@@ -10,7 +10,7 @@
 #include <OpenGL/window.h>
 #include <OpenGL/app.h>
 #include <OpenGL/assetmanager.h>
-#include <OpenGL/gltexture.h>
+#include <OpenGL/texture.h>
 #include <OpenGL/buffer.h>
 #include <OpenGL/camera.h>
 #include <OpenGL/mesh.h>

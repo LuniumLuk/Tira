@@ -10,13 +10,13 @@ AssetManager::AssetManager() {
 
 auto AssetManager::LoadTexture2D(std::string const& name, Filepath const& path, bool relativePath) -> void {
     if (relativePath)
-        singleton->textureLib.emplaceAsset(name, GLTexture2D(getAssetPath(path)));
+        singleton->textureLib.emplaceAsset(name, Texture2D(getAssetPath(path)));
     else
-        singleton->textureLib.emplaceAsset(name, GLTexture2D(path));
+        singleton->textureLib.emplaceAsset(name, Texture2D(path));
 }
 
 auto AssetManager::LoadTexture2D(std::string const& name, size_t width, size_t height, InternalFormat format) -> void {
-    singleton->textureLib.emplaceAsset(name, GLTexture2D(width, height, format));
+    singleton->textureLib.emplaceAsset(name, Texture2D(width, height, format));
 }
 
 auto AssetManager::LoadCubemap(std::string const& name, std::vector<Filepath> const& paths) -> void {
@@ -24,7 +24,7 @@ auto AssetManager::LoadCubemap(std::string const& name, std::vector<Filepath> co
     for (auto path : paths) {
         filenames.emplace_back(std::move(getAssetPath(path)));
     }
-    singleton->textureLib.emplaceAsset(name, GLCubemap(filenames));
+    singleton->textureLib.emplaceAsset(name, Cubemap(filenames));
 }
 
 auto AssetManager::LoadShaderProgramVF(std::string const& name, Filepath const& vert, Filepath const& frag, std::string const& macros) -> void {

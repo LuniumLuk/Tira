@@ -1,6 +1,6 @@
 #pragma once
 
-#include <OpenGL/gltexture.h>
+#include <OpenGL/texture.h>
 #include <iostream>
 #include <vector>
 

@@ -24,7 +24,8 @@ A Tiny Physically Based Renderer for ZJU Computer Graphics 2022 Course Project
 - [x] BVH/Octree acceleration structures
 - [x] Load provided scene (.obj + .xml)
 - [x] Other primitives (sphere)
-- [x] Standard path tracer
+- [x] Whitted style ray tracer
+- [x] Monte Carlo path tracer
 - [ ] Bidirectional path tracer
 - [x] Materials (Blinn-Phong BRDF + Disney BRDF + Glass BSDF)
 - [x] OpenGL compute shader acceleration
@@ -49,11 +50,7 @@ cd Build
 cmake ..
 ```
 
-### Makefile
-
-```shell
-make
-```
+**Note** compile this project in release mode for performance
 
 ## OpenGL
 

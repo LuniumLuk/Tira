@@ -11,7 +11,7 @@
 #include <sstream>
 
 #include "convert.h"
-#include "tira.h"
+#include <tira.h>
 #include "glwrapper.h"
 
 #define DISPLAY_H 720
@@ -22,20 +22,8 @@ std::string sceneName = "CornellBox-Original";
 std::string generateOutputFilename(int SPP);
 std::string generateShaderMacros(bool useMIS, bool acceptIntersectionCloseToLight, int textureCount);
 int SPP = 1;
-// Benchmark (sponza SPP 8, spf = 8)
-// tile size | 64   32   16   8
-//   tpi = 1 | 
-//   tpi = 4 |
-//  tpi = 16 |
-//  tpi = 64 |      33s  70s
-// tpi = 128 |           70s
 int tileSize = 32;
 int samplesPerFrame = 8;
-// Benchmark (sponza SPP 8, tile size = 32)
-// tiles per invoke | 4   8   16  32  64
-//          spf = 1 |                 48s
-//          spf = 4 | 72s 44s 44s 42s 40s
-//          spf = 8 | 69s 42s 39s 38s 33s
 int tilesPerFrame = 16;
 double startTime;
 double endTime;
@@ -80,13 +68,13 @@ struct App : public Application {
     glm::vec3 mCameraPos;
     std::stack<Tile> mTiles;
     int mCurrentFrame = 0;
-    std::vector<GL::GLTexture2D> mTextures;
+    std::vector<GL::Texture2D> mTextures;
     bool mEnableSun;
     glm::vec3 mSunDirection;
     float mSunSolidAngle;
     glm::vec3 mSunRadiance;
     int mTotalTiles;
-    std::unique_ptr<GL::GLTexture2D> mEnvmap = nullptr;
+    std::unique_ptr<GL::Texture2D> mEnvmap = nullptr;
 };
 
 auto App::init() noexcept -> void {
@@ -136,7 +124,7 @@ auto App::init() noexcept -> void {
     Root::get()->assetManager->LoadShaderProgramVF("rt_mix_shader", "screen.vert", "mix.frag");
 
     if (scene.envmap) {
-        mEnvmap = std::make_unique<GL::GLTexture2D>(scene.envmap->width, scene.envmap->height, GL::InternalFormat::FloatRGB, scene.envmap->data);
+        mEnvmap = std::make_unique<GL::Texture2D>(scene.envmap->width, scene.envmap->height, GL::InternalFormat::FloatRGB, scene.envmap->data);
     }
 
     Root::get()->assetManager->LoadTexture2D("rt_sample_counter", imageW, imageH, GL::InternalFormat::FloatRED);

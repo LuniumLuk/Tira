@@ -1,20 +1,28 @@
 cmake_minimum_required(VERSION 3.11.0)
 
-set(NAME Tira)
+set(NAME Tira_CPU)
 
 project(${NAME} VERSION 1.0.0)
 
 include_directories(Tira)
-include_directories(Thirdparty)
-
-file(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/Tira/*.cpp)
-file(GLOB_RECURSE THIRDSOURCES ${PROJECT_SOURCE_DIR}/Thirdparty/*.cpp)
 
 add_executable(${PROJECT_NAME} 
-    ${SOURCES}
-    ${THIRDSOURCES}
-    Platform/win32.cpp
-    Platform/macos.mm)
+    Tira/integrator/integrator.cpp
+    Tira/integrator/whitted.cpp
+    Tira/integrator/montecarlo.cpp
+    Tira/integrator/bidirectional.cpp
+    Tira/misc/image.cpp
+    Tira/scene/bvh.cpp
+    Tira/scene/octree.cpp
+    Tira/scene/material.cpp
+    Tira/scene/scene.cpp
+    Tira/scene/texture.cpp
+    Tira/thirdparty/pugixml.cpp
+    Tira/thirdparty/stb_impl.cpp
+    Tira/window/gui.cpp
+    Tira/window/win32.cpp
+    Tira/window/macos.mm
+    Tira_CPU/main.cpp)
 
 find_package(OpenMP)
 if(OpenMP_CXX_FOUND)

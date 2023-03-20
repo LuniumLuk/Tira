@@ -992,7 +992,7 @@ void main() {
             if (uEnableEnvmap)
                 L += attenuation * calculateDirectLight(SAMPLE_ENVMAP, depth, ray, isect, wi, f, pdf, ray.isDelta);
 
-            if (pdf > EPSILON && dot(f, f) > EPSILON) {
+            if (pdf > EPSILON) {
                 attenuation *= f / pdf;
             }
 

@@ -20,6 +20,7 @@ A Tiny Physically Based Renderer for ZJU Computer Graphics 2022 Course Project
 | geometry sets (created by blender)                                            | ![](./Image/Set0_1024.png)                  | 1024 SPP, 2048x2048, by GTX 960 in 6 mins (lit by sunlight).  |
 | geometry sets (created by blender)                                            | ![](./Image/Set0_2048.png)                  | 2048 SPP, 2048x2048, by GTX 960 in 15 mins (lit by envmap).   |
 | geometry sets (created by blender)                                            | ![](./Image/Set1_2048.png)                  | 2048 SPP, 2048x2048, by GTX 960 in 36 mins.                   |
+| [Mori Knob](https://casual-effects.com/g3d/data10/index.html#mesh23)          | ![](./Image/orbs_256.png)                   | 256 SPP, 1600x1200, by RTX 2070s in 5 hours 36 mins.          |
 
 ## Features
 

@@ -5,7 +5,7 @@
 // Monte Carlo Path Tracing with GLSL Compute Shader
 // Support following features:
 //  1. BlinnPhong and Glass Material
-//  2. Upto 32 diffuse textures
+//  2. Upto 30 diffuse textures
 //  3. MIS for sampling area light and sampling the BSDF
 //
 
@@ -41,31 +41,22 @@ uniform vec3 uSunRadiance;
 uniform int uSamplesPerFrame;
 uniform bool uEnableEnvmap;
 uniform float uEnvmapScale;
+uniform int uMaxDepth;
 
 #define SAMPLE_SUN          0
 #define SAMPLE_AREA_LIGHTS  1
 #define SAMPLE_ENVMAP       2
 
 // #define USE_GEOMETRY_NORMAL
-// #define DEBUG_ENVMAP
-// #define DEBUG_EDGE
 // #define DEBUG_NORMAL
 // #define DEBUG_UV
 // #define DEBUG_DIFFUSE
-// #define DEBUG_VISIBILITY
-// #define DEBUG_RANDOM
 // #define VISIBILITY_TEST_DIST
-// #define ENABLE_BACKFACE_CULLING
 #define USE_MIS_HEURISTICS
 #define ENABLE_ALPHA_TEST
 
 layout (binding = 30) uniform sampler2D uEnvmap;
 
-#ifdef DEBUG_VISIBILITY
-const int MAX_DEPTH                 = 1;
-#else
-const int MAX_DEPTH                 = 8;
-#endif
 const float T_MIN                   = 1e-4;
 const float EPSILON                 = 1e-8;
 const float FLT_MAX                 = 1e+30;
@@ -96,10 +87,6 @@ void pcg4d(inout uvec4 v) {
 
 float rand() {
     pcg4d(seed); return float(seed.x) / float(0xffffffffu);
-}
-
-float random(in vec2 co){
-    return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
 }
 
 vec2 hammersley(in uint i, in uint N) {
@@ -268,12 +255,6 @@ void sampleTriangle(out Intersection isect, out float pdf, in int idx) {
 
 void intersectTriangle(in Ray r, inout Intersection isect, in int idx) {
     Triangle tri = bTriangles[idx];
-
-#ifdef ENABLE_BACKFACE_CULLING
-    if (dot(r.d, tri.normal.xyz) > 0) {
-        return;
-    }
-#endif
 
     vec3 pvec = cross(r.d, tri.e02.xyz);
     float det = dot(tri.e01.xyz, pvec);
@@ -883,17 +864,6 @@ void main() {
     ivec2 pixel = ivec2(gl_GlobalInvocationID.x + uOffsetX, gl_GlobalInvocationID.y + uOffsetY);
     ivec2 dim = imageSize(uRenderTarget);
 
-#ifdef DEBUG_RANDOM
-    vec3 test = vec3(0.0);
-    for (int i = 0; i < uSamplesPerFrame; ++i) {
-        initRNG(i, pixel);
-        test += vec3(rand(), rand(), rand());
-    }
-    imageStore(uRenderTarget, pixel, vec4(test / uSamplesPerFrame, 1.0));
-    imageStore(uSampleCounter, pixel, vec4(float(uSamplesPerFrame) / (uCurrentFrame + uSamplesPerFrame), 0.0, 0.0, 1.0));
-    return;
-#endif
-
     vec3 color = vec3(0.0);
     for (int i = 0; i < uSamplesPerFrame; ++i) {
         initRNG(i, pixel);
@@ -903,25 +873,9 @@ void main() {
         Ray ray = initRay(uCameraPos, normalize(getCameraRayDir(i, pixel, dim)));
 
         int depth = 0;
-        while (depth < MAX_DEPTH) {
+        while (depth < uMaxDepth) {
             Intersection isect = initIntersection();
             intersectBVH(ray, isect);
-
-#ifdef DEBUG_ENVMAP
-            if (!isect.hit) {
-                L += attenuation * getEnvmapLight(ray.d);
-            }
-            break;
-#endif
-
-#ifdef DEBUG_EDGE
-            if (isect.hit) {
-                if (dot(isect.normal, -ray.d) < 0) {
-                    L = vec3(1.0);
-                }
-            }
-            break;
-#endif
 
 #ifdef DEBUG_NORMAL
             if (isect.hit) {

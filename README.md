@@ -4,6 +4,8 @@ A Tiny Physically Based Renderer for ZJU Computer Graphics 2022 Course Project
 
 [Course Page](http://10.76.1.181/courses/graphics/2022/) - only available in ZJU internal network
 
+![](./Image/spot.png)
+
 ## Gallery
 
 | Model                                                                         | Rendered Image                              | Description                                                   |
@@ -82,8 +84,9 @@ I extend the original xml file for scene description as follow:
     - spp: Samples per Pixel
     - mis: Use MIS in renderer
     - maxbounce: Max bounce or depth in renderer
+    - robustlight: Enable light to be intersect with larger tollerance
 -->
-<integrator spp="256" version="2" mis="true" maxbounce="8" />
+<integrator spp="256" mis="true" maxbounce="8" robustlight="true" />
 <!-- 
   Scene settings:
     - scale: Scale the scene in case the scene is too small or too large
@@ -93,8 +96,9 @@ I extend the original xml file for scene description as follow:
 <!-- 
   Envmap settings:
     - url: URL of envmap, envmap must be in equirectangular projection
+    - scale: Scale of envmap intensity
 -->
-<envmap url="asset/envmap/indoor.exr" />
+<envmap url="asset/envmap/indoor.exr" scale="1.0" />
 <!-- 
   Sunlight settings:
     - direction: Direction toward sun
@@ -110,12 +114,11 @@ I extend the original xml file for scene description as follow:
 -->
 <sphere mtlname="material_0" center="0.0, 1.0, 1.0" radius="0.1" />
 <!-- 
-  Render tiling settings (Currently only available in GPU version):
+  GPU compute shader kernel settings:
     - size: Tile size
-    - involk: Tiles per frame
-    - spf: Samples per frame for currently rendering tiles
+    - macro: Shader additional macros
 -->
-<tile size="64" num="16" spf="8" />
+<kernel size="64" macro="" />
 ```
 
 ## Thirdparty Liberaries

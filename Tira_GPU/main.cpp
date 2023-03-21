@@ -31,10 +31,11 @@
 
 std::string sceneName = "CornellBox-Original";
 std::string generateOutputFilename(int SPP);
-std::string generateShaderMacros(bool useMIS, bool acceptIntersectionCloseToLight, int textureCount);
+std::string generateShaderMacros(bool useMIS, bool acceptIntersectionCloseToLight, int textureCount, std::string const& additional);
+int maxDepth = 8;
 int SPP = 1;
-int tileSize = 32;
-int samplesPerFrame = 8;
+int kernelSize = 32;
+int samplesPerFrame = 1;
 double startTime;
 double endTime;
 tira::Scene scene;
@@ -89,10 +90,10 @@ struct App : public Application {
 };
 
 auto App::init() noexcept -> void {
-    tileSize = scene.tiling_info.size;
-    samplesPerFrame = scene.tiling_info.spf;
+    kernelSize = scene.kernel_info.size;
 
     SPP = scene.integrator_info.spp;
+    maxDepth = scene.integrator_info.max_bounce;
     imageW = scene.scr_w;
     imageH = scene.scr_h;
     useMIS = scene.integrator_info.use_mis;
@@ -104,15 +105,15 @@ auto App::init() noexcept -> void {
     mSunRadiance = { scene.sun_radiance.x, scene.sun_radiance.y, scene.sun_radiance.z };
 
     // Generate tiles
-    int xTiles = (imageW + tileSize - 1) / tileSize;
-    int yTiles = (imageH + tileSize - 1) / tileSize;
+    int xTiles = (imageW + kernelSize - 1) / kernelSize;
+    int yTiles = (imageH + kernelSize - 1) / kernelSize;
 
     for (int y = 0; y < yTiles; ++y) for (int x = xTiles - 1; x >= 0; --x) {
         Tile tile{};
-        tile.x = x * tileSize;
-        tile.y = y * tileSize;
-        tile.w = tileSize;
-        tile.h = tileSize;
+        tile.x = x * kernelSize;
+        tile.y = y * kernelSize;
+        tile.w = kernelSize;
+        tile.h = kernelSize;
         tile.SPP = 0;
         mTiles.push(tile);
     }
@@ -129,7 +130,7 @@ auto App::init() noexcept -> void {
         std::cout << "[GL] Do not support more than " << MAX_MATERIAL_TEXTURE_COUNT << " textures\n";
     }
 
-    Root::get()->assetManager->LoadShaderProgramCompute("rt_compute_shader", "rt.comp", generateShaderMacros(useMIS, acceptIntersectionCloseToLight, textures.size()));
+    Root::get()->assetManager->LoadShaderProgramCompute("rt_compute_shader", "rt.comp", generateShaderMacros(useMIS, acceptIntersectionCloseToLight, textures.size(), scene.kernel_info.macro));
     Root::get()->assetManager->LoadShaderProgramVF("rt_screen_shader", "screen.vert", "screen.frag");
     Root::get()->assetManager->LoadShaderProgramVF("rt_mix_shader", "screen.vert", "mix.frag");
 
@@ -217,6 +218,7 @@ auto App::update(double deltaTime) noexcept -> void {
     Root::get()->assetManager->GetShader("rt_compute_shader")->setVec3("uSunRadiance", mSunRadiance);
     Root::get()->assetManager->GetShader("rt_compute_shader")->setBool("uEnableEnvmap", mEnvmap != nullptr);
     Root::get()->assetManager->GetShader("rt_compute_shader")->setFloat("uEnvmapScale", scene.envmap_scale);
+    Root::get()->assetManager->GetShader("rt_compute_shader")->setInt("uMaxDepth", maxDepth);
     for (int i = 0; i < mTextures.size(); ++i) mTextures[i].bind(i);
     if (mEnvmap) mEnvmap->bind(30);
 
@@ -273,12 +275,12 @@ auto App::update(double deltaTime) noexcept -> void {
     ImGui::Text((std::to_string(imageW) + "x" + std::to_string(imageH)).c_str());
     ImGui::Text((std::string("FPS: ") + std::to_string(mFPS)).c_str());
     float tilesPerSecond = mFPS * samplesPerFrame / SPP;
-    ImGui::Text((std::string("Tile size: ") + std::to_string(tileSize)).c_str());
+    ImGui::Text((std::string("Kernel size: ") + std::to_string(kernelSize)).c_str());
     ImGui::Text((std::string("Samples per frame: ") + std::to_string(samplesPerFrame)).c_str());
     ImGui::Text((std::string("SPP for current tiles: ") + std::to_string(tile.SPP) + "/" + std::to_string(SPP)).c_str());
     ImGui::Text((std::string("Tiles: ") + std::to_string(mTotalTiles - mTiles.size()) + "/" + std::to_string(mTotalTiles)).c_str());
     ImGui::Text((std::string("Tiles/s: ") + std::to_string(tilesPerSecond)).c_str());
-    ImGui::Text((std::string("Estimated time left: ") + std::to_string(mTiles.size() / tilesPerSecond / 60) + "min").c_str());
+    ImGui::Text((std::string("Estimated time left: ") + std::to_string(std::ceil(mTiles.size() / tilesPerSecond / 60)) + " min").c_str());
     if (ImGui::Button("Terminate")) {
         terminate();
     }
@@ -378,13 +380,21 @@ std::string generateOutputFilename(int SPP) {
     return filename;
 }
 
-std::string generateShaderMacros(bool useMIS, bool acceptIntersectionCloseToLight, int textureCount) {
+std::string generateShaderMacros(bool useMIS, bool acceptIntersectionCloseToLight, int textureCount, std::string const& additional) {
     std::string macros;
     if (useMIS) {
         macros += "#define MIS\n";
     }
     if (acceptIntersectionCloseToLight) {
         macros += "#define ACCEPT_INTERSECTION_CLOSE_TO_LIGHT\n";
+    }
+    size_t front = 0, end = 0;
+    while ((end = additional.find(' ', front)) != std::string::npos) {
+        macros += "#define " + additional.substr(front, end) + "\n";
+        front = end + 1;
+    }
+    if (front < additional.length()) {
+        macros += "#define " + additional.substr(front) + "\n";
     }
     std::stringstream textures;
     for (int i = 0; i < textureCount; ++i) {
@@ -396,6 +406,8 @@ std::string generateShaderMacros(bool useMIS, bool acceptIntersectionCloseToLigh
         textures << "if (i == " << i << ") return texture(uDiffuseMap" << i << ", uv);\n";
     }
     textures << "return vec4(1.0, 0.0, 1.0, 1.0);\n}\n";
+
+    std::cout << "[GL] Shader macros:\n" << macros << "\n";
 
     return macros + textures.str();
 }

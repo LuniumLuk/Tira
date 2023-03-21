@@ -299,17 +299,15 @@ namespace tira {
         // Load integrator specs.
         if (!doc.child("integrator").empty()) {
             integrator_info.spp = doc.child("integrator").attribute("spp").as_int();
-            integrator_info.version = doc.child("integrator").attribute("version").as_int();
             integrator_info.use_mis = doc.child("integrator").attribute("mis").as_bool();
             integrator_info.max_bounce = doc.child("integrator").attribute("maxbounce").as_int();
             integrator_info.robust_light = doc.child("integrator").attribute("robustlight").as_bool();
         }
 
         // Load tiling specs.
-        if (!doc.child("tile").empty()) {
-            tiling_info.size = doc.child("tile").attribute("size").as_int();
-            tiling_info.num = doc.child("tile").attribute("num").as_int();
-            tiling_info.spf = doc.child("tile").attribute("spf").as_int();
+        if (!doc.child("kernel").empty()) {
+            kernel_info.size = doc.child("kernel").attribute("size").as_int();
+            kernel_info.macro = doc.child("kernel").attribute("macro").as_string();
         }
 
         /////////////////////////////////////////////

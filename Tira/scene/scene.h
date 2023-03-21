@@ -24,7 +24,6 @@ namespace tira {
     struct Scene {
         struct IntegratorInfo {
             int spp = 1;
-            int version = 2;
             bool use_mis = true;
             int max_bounce = 8;
             bool robust_light = true; // Accept intersection very close to light as light intersection.
@@ -32,8 +31,7 @@ namespace tira {
 
         struct TilingInfo {
             int size = 64;
-            int num = 16;
-            int spf = 8;
+            std::string macro = "";
         };
 
         int scr_w = 1024;
@@ -45,7 +43,7 @@ namespace tira {
         float lights_total_area;
         float scene_scale = 1.f;
         IntegratorInfo integrator_info;
-        TilingInfo tiling_info;
+        TilingInfo kernel_info;
 
         enum struct AcceleratorType {
             BVH,

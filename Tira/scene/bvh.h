@@ -33,9 +33,9 @@ namespace tira {
         int max_height;
 
 #ifdef BVH_WITH_SAH
-        BVHAccel(int _max_objs = 4, SplitMethod _split_method = SplitMethod::SAH)
+        BVHAccel(int _max_objs = 2, SplitMethod _split_method = SplitMethod::SAH)
 #else
-        BVHAccel(int _max_objs = 4, SplitMethod _split_method = SplitMethod::NAIVE)
+        BVHAccel(int _max_objs = 2, SplitMethod _split_method = SplitMethod::NAIVE)
 #endif
             : max_objs(_max_objs)
             , split_method(_split_method) {}

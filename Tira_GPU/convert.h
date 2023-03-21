@@ -98,7 +98,7 @@ inline std::vector<GL::Material> getMaterialList(tira::Scene const& scene, std::
             gm.transmittance = to_vec4(bm->transmittance);
             gm.info.x = bm->shininess;
             gm.info.y = bm->ior;
-            gm.info.z = -1;
+            gm.info.z = 0;
             gm.info.w = -1;
 
             if (bm->diffuse_texture) {

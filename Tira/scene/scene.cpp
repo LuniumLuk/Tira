@@ -321,6 +321,7 @@ namespace tira {
         case AcceleratorType::Octree:
             accel = new OctreeAccel(); break;
         }
+        std::cout << "Building accleration Structure ... please wait ...\n";
         timer.update();
         accel->build(std::forward<std::vector<Object*>>(objects));
         timer.update();

@@ -13,6 +13,17 @@
 #include "convert.h"
 #include <tira.h>
 #include "glwrapper.h"
+#include "threadpool.h"
+
+// [TODO] To run in local windows debugger, change the following ASSET_DIR to "../Asset/"
+#ifndef ASSET_DIR
+#define ASSET_DIR "./Asset/"
+#endif
+
+// [TODO] To run in local windows debugger, change the following SHADER_DIR to "./Shader/"
+#ifndef SHADER_DIR
+#define SHADER_DIR "./Tira_GPU/Shader/"
+#endif
 
 #define DISPLAY_H 720
 #define USE_TILING
@@ -24,7 +35,6 @@ std::string generateShaderMacros(bool useMIS, bool acceptIntersectionCloseToLigh
 int SPP = 1;
 int tileSize = 32;
 int samplesPerFrame = 8;
-int tilesPerFrame = 16;
 double startTime;
 double endTime;
 tira::Scene scene;
@@ -64,23 +74,22 @@ struct App : public Application {
     double mFPSTimer = 0.0;
     float mTime = 0.0;
     int mFrame = 0;
-    glm::mat3 mScreenToRaster;
-    glm::vec3 mCameraPos;
+    glm::mat3 mScreenToRaster{ 1.0f };
+    glm::vec3 mCameraPos{ 0.0f };
     std::stack<Tile> mTiles;
     int mCurrentFrame = 0;
     std::vector<GL::Texture2D> mTextures;
-    bool mEnableSun;
-    glm::vec3 mSunDirection;
-    float mSunSolidAngle;
-    glm::vec3 mSunRadiance;
-    int mTotalTiles;
+    bool mEnableSun = false;
+    glm::vec3 mSunDirection{ 0.0f };
+    float mSunSolidAngle = 0.0f;
+    glm::vec3 mSunRadiance{ 0.0f };
+    int mTotalTiles = 0;
     std::unique_ptr<GL::Texture2D> mEnvmap = nullptr;
     tira::Timer mTimer;
 };
 
 auto App::init() noexcept -> void {
     tileSize = scene.tiling_info.size;
-    tilesPerFrame = scene.tiling_info.num;
     samplesPerFrame = scene.tiling_info.spf;
 
     SPP = scene.integrator_info.spp;
@@ -185,17 +194,17 @@ auto App::init() noexcept -> void {
 }
 
 auto App::update(double deltaTime) noexcept -> void {
+    if (mTiles.empty()) {
+        terminate();
+        return;
+    }
+    auto& tile = mTiles.top();
+
     glViewport(0, 0, imageW, imageH);
     auto quadMesh = Root::get()->assetManager->GetMesh("rt_quad_mesh");
 
     Root::get()->assetManager->GetFrameBuffer("rt_render_target")->bind();
     FrameBuffer::ClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-    std::vector<Tile> tiles;
-    while (tiles.size() < tilesPerFrame && !mTiles.empty()) {
-        tiles.push_back(mTiles.top());
-        mTiles.pop();
-    }
 
     Root::get()->assetManager->GetShader("rt_compute_shader")->use();
     Root::get()->assetManager->GetShader("rt_compute_shader")->setInt("uSPP", SPP);
@@ -206,32 +215,23 @@ auto App::update(double deltaTime) noexcept -> void {
     Root::get()->assetManager->GetShader("rt_compute_shader")->setVec3("uSunDirection", mSunDirection);
     Root::get()->assetManager->GetShader("rt_compute_shader")->setFloat("uSunSolidAngle", mSunSolidAngle);
     Root::get()->assetManager->GetShader("rt_compute_shader")->setVec3("uSunRadiance", mSunRadiance);
-    Root::get()->assetManager->GetShader("rt_compute_shader")->setInt("uSamplesPerFrame", samplesPerFrame);
     Root::get()->assetManager->GetShader("rt_compute_shader")->setBool("uEnableEnvmap", mEnvmap != nullptr);
     Root::get()->assetManager->GetShader("rt_compute_shader")->setFloat("uEnvmapScale", scene.envmap_scale);
     for (int i = 0; i < mTextures.size(); ++i) mTextures[i].bind(i);
-    if (mEnvmap) {
-        mEnvmap->bind(30);
-    }
+    if (mEnvmap) mEnvmap->bind(30);
 
     glBindImageTexture(0, Root::get()->assetManager->GetFrameBuffer("rt_render_target")->colorAttachments[0].handle, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
     glBindImageTexture(1, Root::get()->assetManager->GetTexture("rt_sample_counter")->handle, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
 
     mTimer.update();
-    for (auto& tile : tiles) {
-        Root::get()->assetManager->GetShader("rt_compute_shader")->setInt("uCurrentFrame", tile.SPP);
-        Root::get()->assetManager->GetShader("rt_compute_shader")->setInt("uOffsetX", tile.x);
-        Root::get()->assetManager->GetShader("rt_compute_shader")->setInt("uOffsetY", tile.y);
-        tile.SPP += samplesPerFrame;
-        glDispatchCompute(tile.w / 4, tile.h / 4, 1);
-    }
+    Root::get()->assetManager->GetShader("rt_compute_shader")->setInt("uSamplesPerFrame", std::min(samplesPerFrame, SPP - tile.SPP));
+    Root::get()->assetManager->GetShader("rt_compute_shader")->setInt("uCurrentFrame", tile.SPP);
+    Root::get()->assetManager->GetShader("rt_compute_shader")->setInt("uOffsetX", tile.x);
+    Root::get()->assetManager->GetShader("rt_compute_shader")->setInt("uOffsetY", tile.y);
+    tile.SPP += samplesPerFrame;
+    glDispatchCompute(tile.w / 4, tile.h / 4, 1);
     glMemoryBarrier(GL_ALL_BARRIER_BITS);
     double duration = mTimer.delta_time();
-
-
-    for (auto const& tile : tiles) {
-        if (tile.SPP < SPP) mTiles.push(tile);
-    }
 
     // Screen Shader
     // Pass #1 mix with present buffer
@@ -272,11 +272,10 @@ auto App::update(double deltaTime) noexcept -> void {
     ImGui::Text((std::string("SPP: ") + std::to_string(SPP)).c_str());
     ImGui::Text((std::to_string(imageW) + "x" + std::to_string(imageH)).c_str());
     ImGui::Text((std::string("FPS: ") + std::to_string(mFPS)).c_str());
-    float tilesPerSecond = mFPS * tiles.size() * samplesPerFrame / SPP;
+    float tilesPerSecond = mFPS * samplesPerFrame / SPP;
     ImGui::Text((std::string("Tile size: ") + std::to_string(tileSize)).c_str());
     ImGui::Text((std::string("Samples per frame: ") + std::to_string(samplesPerFrame)).c_str());
-    ImGui::Text((std::string("Tiles per frame: ") + std::to_string(tilesPerFrame)).c_str());
-    ImGui::Text((std::string("SPP for current tiles: ") + std::to_string(tiles[0].SPP) + "/" + std::to_string(SPP)).c_str());
+    ImGui::Text((std::string("SPP for current tiles: ") + std::to_string(tile.SPP) + "/" + std::to_string(SPP)).c_str());
     ImGui::Text((std::string("Tiles: ") + std::to_string(mTotalTiles - mTiles.size()) + "/" + std::to_string(mTotalTiles)).c_str());
     ImGui::Text((std::string("Tiles/s: ") + std::to_string(tilesPerSecond)).c_str());
     ImGui::Text((std::string("Estimated time left: ") + std::to_string(mTiles.size() / tilesPerSecond / 60) + "min").c_str());
@@ -286,16 +285,22 @@ auto App::update(double deltaTime) noexcept -> void {
 
     ImGui::End();
 
-    if (duration < 0.05) {
-        samplesPerFrame += 1;
-        tilesPerFrame += 1;
+    if (tile.SPP >= SPP) {
+        mTiles.pop();
     }
 
-    if (mTiles.empty()) terminate();
+    if (duration < 0.05) {
+        samplesPerFrame += 1;
+    }
+    else {
+        samplesPerFrame = std::max(1, samplesPerFrame - 1);
+    }
 }
 
 auto App::quit() noexcept -> void {
     endTime = Root::get()->timer->totalTime();
+    std::cout << "[GL] Total render time: " << (endTime - startTime) << "s\n";
+    std::cout << "[GL] Writing image ... please wait ...\n";
 
     size_t w = imageW;
     size_t h = imageH;
@@ -311,7 +316,7 @@ auto App::quit() noexcept -> void {
     glClampColor(GL_CLAMP_READ_COLOR, GL_FALSE);
     glReadPixels(0, 0, w, h, GL_RGB, GL_FLOAT, imageData.data());
 
-    float scale = (float)samplesPerFrame / SPP;
+    float scale = (float)1 / SPP;
     tira::Image image(w, h);
     for (int x = 0; x < w; ++x) {
         for (int y = 0; y < h; ++y) {
@@ -324,7 +329,6 @@ auto App::quit() noexcept -> void {
     }
     image.write_PNG(generateOutputFilename(SPP));
 
-    std::cout << "[GL] Total render time: " << (endTime - startTime) << "s\n";
 }
 
 int main(int argc, char* argv[]) {
@@ -337,8 +341,8 @@ int main(int argc, char* argv[]) {
     }
 
     scene.load(
-        "./Asset/" + sceneName + "/" + sceneName + ".obj",
-        "./Asset/" + sceneName + "/" + sceneName + ".xml",
+        ASSET_DIR + sceneName + "/" + sceneName + ".obj",
+        ASSET_DIR + sceneName + "/" + sceneName + ".xml",
         tira::Scene::MaterialType::BlinnPhong);
 
     GL::WindowDesc desc{};
@@ -347,8 +351,8 @@ int main(int argc, char* argv[]) {
     desc.height = DISPLAY_H;
     desc.resizable = false;
     Root root{ desc };
-    Root::get()->shaderRoot = "./Tira_GPU/Shader";
-    Root::get()->assetRoot = "./Asset";
+    Root::get()->shaderRoot = SHADER_DIR;
+    Root::get()->assetRoot = ASSET_DIR;
     App app;
 
     try {

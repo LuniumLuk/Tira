@@ -56,10 +56,8 @@ uniform float uEnvmapScale;
 // #define DEBUG_RANDOM
 // #define VISIBILITY_TEST_DIST
 // #define ENABLE_BACKFACE_CULLING
+#define USE_MIS_HEURISTICS
 #define ENABLE_ALPHA_TEST
-#define MOROZ_MYKHAILO_RNG
-#define PIXEL_COORDS_AS_SEED
-#define SAMPLE_LIGHT
 
 layout (binding = 30) uniform sampler2D uEnvmap;
 
@@ -86,11 +84,7 @@ const float OFFSET_RAY_ORIGIN_DELTA = 1e-12;
 uvec4 seed;
 
 void initRNG(int i, ivec2 pixel) {
-#ifdef PIXEL_COORDS_AS_SEED
     seed = uvec4(vec2(pixel), uint(uCurrentFrame + i), uint(pixel.x) + uint(pixel.y));
-#else
-    seed = uvec4(vec2(1, 2), uint(uCurrentFrame + i), 12);
-#endif
 }
 
 void pcg4d(inout uvec4 v) {
@@ -190,6 +184,7 @@ layout (std430, binding = 5) buffer AreaLights { int bAreaLights[]; };
 struct Ray {
     vec3 o;
     vec3 d;
+    vec3 invD;
     float tMin;
     float tMax;
     bool isDelta;
@@ -204,6 +199,7 @@ Ray initRay(in vec3 o, in vec3 d) {
     Ray r;
     r.o = o;
     r.d = d;
+    r.invD = 1.0 / d;
     r.tMin = T_MIN;
     r.tMax = FLT_MAX;
     r.isDelta = false;
@@ -240,12 +236,8 @@ Intersection initIntersection() {
     return isect;
 }
 
-void sampleTriangle(out Intersection isect, out float pdf, in int idx, in vec2 seed) {
-#ifdef MOROZ_MYKHAILO_RNG
+void sampleTriangle(out Intersection isect, out float pdf, in int idx) {
     vec2 u0 = vec2(rand(), rand());
-#else
-    vec2 u0 = vec2(random(seed.xy - vec2(1.14514, 1.919810)), random(seed.yx + vec2(1.232323, 6.545454)));
-#endif
     Triangle tri = bTriangles[idx];
     float x = sqrt(u0.x);
     float y = u0.y;
@@ -360,25 +352,22 @@ void intersectTriangle(in Ray r, inout Intersection isect, in int idx) {
 }
 
 bool intersectBound(in Ray r, in vec4 bmin, in vec4 bmax) {
-    float tx1 = (bmin.x - r.o.x) / r.d.x;
-    float tx2 = (bmax.x - r.o.x) / r.d.x;
+    float tx1 = (bmin.x - r.o.x) * r.invD.x;
+    float tx2 = (bmax.x - r.o.x) * r.invD.x;
     float tmin = min(tx1, tx2);
     float tmax = max(tx1, tx2);
-    float ty1 = (bmin.y - r.o.y) / r.d.y;
-    float ty2 = (bmax.y - r.o.y) / r.d.y;
+    float ty1 = (bmin.y - r.o.y) * r.invD.y;
+    float ty2 = (bmax.y - r.o.y) * r.invD.y;
     tmin = max(tmin, min(ty1, ty2));
     tmax = min(tmax, max(ty1, ty2));
-    float tz1 = (bmin.z - r.o.z) / r.d.z;
-    float tz2 = (bmax.z - r.o.z) / r.d.z;
+    float tz1 = (bmin.z - r.o.z) * r.invD.z;
+    float tz2 = (bmax.z - r.o.z) * r.invD.z;
     tmin = max(tmin, min(tz1, tz2));
     tmax = min(tmax, max(tz1, tz2));
     return tmax >= tmin && tmax > 0;
 }
 
 void intersectBVH(in Ray r, inout Intersection isect) {
-    // for (int i = 0; i < bTriangles.length(); i++) {
-    //     intersectTriangle(r, isect, i);
-    // }
     int idx = 0;
     while (idx >= 0) {
         BVHNode node = bBVHNodes[idx];
@@ -404,6 +393,7 @@ float visibilityTestHit(in vec3 P, in vec3 wi) {
     Ray ray;
     ray.o = P;
     ray.d = wi;
+    ray.invD = 1.0 / wi;
     ray.tMin = T_MIN;
     ray.tMax = FLT_MAX;
     ray.isShadowRay = true;
@@ -420,6 +410,7 @@ float visibilityTestObject(in vec3 P, in vec3 wi, in int object) {
     Ray ray;
     ray.o = P;
     ray.d = wi;
+    ray.invD = 1.0 / wi;
     ray.tMin = T_MIN;
     ray.tMax = FLT_MAX;
     ray.isShadowRay = true;
@@ -449,17 +440,13 @@ float visibilityTestDistance(in vec3 P, in vec3 wi, in float dist) {
     return 0.0;
 }
 
-void sampleLight(in vec3 P, in vec3 N, inout Intersection isect, inout vec3 wi, inout float pdf, inout float visibility, in vec2 seed) {
-#ifdef MOROZ_MYKHAILO_RNG
+void sampleLight(in vec3 P, in vec3 N, inout Intersection isect, inout vec3 wi, inout float pdf, inout float visibility) {
     float p = rand() * uLightTotalArea;
-#else
-    float p = random(seed.xy + vec2(6.54321, 1.23456)) * uLightTotalArea;
-#endif
     float cdf = 0.0;
     for (int i = 0; i < bAreaLights.length(); i++) {
         cdf += bTriangles[bAreaLights[i]].info.z / uLightTotalArea;
         if (cdf >= p) {
-            sampleTriangle(isect, pdf, bAreaLights[i], vec2(seed.yx));
+            sampleTriangle(isect, pdf, bAreaLights[i]);
             pdf = 1 / uLightTotalArea;
 
             vec3 Q = isect.position;
@@ -520,13 +507,9 @@ vec3 uniformSampleCone(in vec2 u, float cosThetaMax) {
     return sphericalToCartesian(sinTheta, cosTheta, phi);
 }
 
-void sampleSun(in vec3 P, in vec3 N, inout Intersection isect, inout vec3 wi, inout float pdf, inout float visibility, in vec2 seed) {
+void sampleSun(in vec3 P, in vec3 N, inout Intersection isect, inout vec3 wi, inout float pdf, inout float visibility) {
     pdf = 0.0;
-#ifdef MOROZ_MYKHAILO_RNG
     vec2 u = vec2(rand(), rand());
-#else
-    vec2 u = vec2(random(seed.xy), random(seed.yx));
-#endif
     float cosThetaMax = 1.0 - uSunSolidAngle * TWO_PI;
     vec3 dir = uniformSampleCone(u, cosThetaMax);
     wi = normalize(localToWorld(dir, uSunDirection));
@@ -538,12 +521,8 @@ void sampleSun(in vec3 P, in vec3 N, inout Intersection isect, inout vec3 wi, in
     visibility = visibilityTestHit(P, wi);
 }
 
-void sampleEnvmap(in vec3 P, in vec3 N, inout Intersection isect, inout vec3 wi, inout float pdf, inout float visibility, in vec2 seed) {
-#ifdef MOROZ_MYKHAILO_RNG
+void sampleEnvmap(in vec3 P, in vec3 N, inout Intersection isect, inout vec3 wi, inout float pdf, inout float visibility) {
     vec2 u = vec2(rand(), rand());
-#else
-    vec2 u = vec2(random(seed.xy), random(seed.yx));
-#endif
     vec3 dir = sampleUnitHemisphere(u);
     wi = normalize(localToWorld(dir, N));
     pdf = INV_TWO_PI;
@@ -621,6 +600,26 @@ vec3 calcProbabilities(in Material mat, in vec3 wo, in vec3 N) {
     return vec3(pd, ps, pr);
 }
 
+ivec2 misSampleCountHeuristics(in Material mat, in vec3 wo, in vec3 N) {
+    if (int(mat.info.z) == 0) {
+        // BlinnPhong Material.
+        vec3 PR = calcProbabilities(mat, wo, N);
+        float pd = PR.x;
+        if (pd < EPSILON) {
+            return ivec2(1, 1);
+        }
+        else {
+            int light = max(min(int(1.0 / pd), 8), 1);
+            int brdf = max(min(int((1.0 / pd) * (1 - pd) / pd), 8), 1);
+            return ivec2(light, brdf);
+        }
+    }
+    else {
+        // Glass Material.
+        return ivec2(0, 1);
+    }
+}
+
 float pdfMaterialBlinnPhong(in Material mat, in vec3 wo, in vec3 wi, in vec3 tangent, in vec3 bitangent, in vec3 N) {
     vec3 PR = calcProbabilities(mat, wo, N);
     float pd = PR.x;
@@ -639,19 +638,13 @@ float pdfMaterialGlass(in Material mat, in vec3 wo, in vec3 wi, in vec3 tangent,
     return 1.0;
 }
 
-void sampleMaterialBlinnPhong(in Material mat, in vec3 wo, in vec3 N, out vec3 wi, in vec3 tangent, in vec3 bitangent, out float pdf, inout bool isDelta, in vec2 seed) {
+void sampleMaterialBlinnPhong(in Material mat, in vec3 wo, in vec3 N, out vec3 wi, in vec3 tangent, in vec3 bitangent, out float pdf, inout bool isDelta) {
     pdf = 0.0;
     wi = vec3(1.0);
     isDelta = false;
 
-#ifdef MOROZ_MYKHAILO_RNG
     vec2 u = vec2(rand(), rand());
     float rnd = rand();
-#else
-    vec2 u = vec2(random(seed.xy), random(seed.yx - vec2(3.333333, 8.636363)));
-    float rnd = random(seed + vec2(2.878787, 0.171717));
-#endif
-
 
     vec3 PR = calcProbabilities(mat, wo, N);
     float pd = PR.x;
@@ -700,7 +693,7 @@ void sampleMaterialBlinnPhong(in Material mat, in vec3 wo, in vec3 N, out vec3 w
     pdf = pdfMaterialBlinnPhong(mat, wo, wi, tangent, bitangent, N);
 }
 
-void sampleMaterialGlass(in Material mat, in vec3 wo, in vec3 N, out vec3 wi, in vec3 tangent, in vec3 bitangent, out float pdf, inout bool isDelta, in vec2 seed) {
+void sampleMaterialGlass(in Material mat, in vec3 wo, in vec3 N, out vec3 wi, in vec3 tangent, in vec3 bitangent, out float pdf, inout bool isDelta) {
     float NoV = dot(N, wo);
     bool backFace = NoV < 0;
     float eta = backFace ? mat.info.y : 1.0 / mat.info.y;
@@ -712,11 +705,7 @@ void sampleMaterialGlass(in Material mat, in vec3 wo, in vec3 N, out vec3 wi, in
 
     bool cannotRefract = eta * sinTheta > 1.0;
 
-#ifdef MOROZ_MYKHAILO_RNG
     if (cannotRefract || rand() < fresnelSchlick(cosTheta, eta)) {
-#else
-    if (cannotRefract || random(seed) < fresnelSchlick(cosTheta, eta)) {
-#endif
         wi = reflect(-wo, normal);
     }
     else {
@@ -765,12 +754,12 @@ float pdfMaterial(in Material mat, in vec3 wo, in vec3 wi, in vec3 tangent, in v
     }
 }
 
-void sampleMaterial(in Material mat, in vec3 wo, in vec3 N, out vec3 wi, in vec3 tangent, in vec3 bitangent, out float pdf, inout bool isDelta, in vec2 seed) {
+void sampleMaterial(in Material mat, in vec3 wo, in vec3 N, out vec3 wi, in vec3 tangent, in vec3 bitangent, out float pdf, inout bool isDelta) {
     if (int(mat.info.z) == 0) {
-        sampleMaterialBlinnPhong(mat, wo, N, wi, tangent, bitangent, pdf, isDelta, seed);
+        sampleMaterialBlinnPhong(mat, wo, N, wi, tangent, bitangent, pdf, isDelta);
     }
     else {
-        sampleMaterialGlass(mat, wo, N, wi, tangent, bitangent, pdf, isDelta, seed);
+        sampleMaterialGlass(mat, wo, N, wi, tangent, bitangent, pdf, isDelta);
     }
 }
 
@@ -806,89 +795,98 @@ vec3 calculateDirectLight(in int type, in int depth, in Ray ray, in Intersection
     bool isBlack = false;
     // MIS weight
     float weight = 1.0;
-    vec2 seed;
+    int lightSampleCount = 1;
+    int brdfSampleCount = 1;
 
-#ifdef SAMPLE_LIGHT
-    Intersection isectLight = initIntersection();
+#ifdef USE_MIS_HEURISTICS
+    ivec2 misHeuristics = misSampleCountHeuristics(bMaterials[isect.material], wo, isect.normal);
+    lightSampleCount = misHeuristics.x;
+    brdfSampleCount = misHeuristics.y;
+#endif
+
     vec3 Li;
-    if (type == SAMPLE_AREA_LIGHTS) {
-        // Sampling the lights ---- area sampling strategy.
-        sampleLight(isect.position, isect.normal, isectLight, wi, pdfLight, geom, vec2(isect.position.xy + vec2(depth)));
-        Li = bMaterials[isectLight.material].emission.rgb;
-    }
-    else if (type == SAMPLE_SUN) {
-        sampleSun(isect.position, isect.normal, isectLight, wi, pdfLight, geom, vec2(isect.position.xy + vec2(depth)));
-        Li = uSunRadiance;
-    }
-    else if (type == SAMPLE_ENVMAP) {
-        sampleEnvmap(isect.position, isect.normal, isectLight, wi, pdfLight, geom, vec2(isect.position.xy + vec2(depth)));
-        Li = getEnvmapLight(wi);
-    }
+    for (int i = 0; i < lightSampleCount; i++) {
+        Intersection isectLight;
+        if (type == SAMPLE_AREA_LIGHTS) {
+            // Sampling the lights ---- area sampling strategy.
+            sampleLight(isect.position, isect.normal, isectLight, wi, pdfLight, geom);
+            Li = bMaterials[isectLight.material].emission.rgb;
+        }
+        else if (type == SAMPLE_SUN) {
+            sampleSun(isect.position, isect.normal, isectLight, wi, pdfLight, geom);
+            Li = uSunRadiance;
+        }
+        else if (type == SAMPLE_ENVMAP) {
+            sampleEnvmap(isect.position, isect.normal, isectLight, wi, pdfLight, geom);
+            Li = getEnvmapLight(wi);
+        }
 
-    isBlack = dot(Li, Li) < EPSILON;
+        isBlack = dot(Li, Li) < EPSILON;
 
-    if (pdfLight > EPSILON && !isBlack) {
-        vec3 f = evalMaterial(bMaterials[isect.material], wo, wi, isect.normal, isect.uv, isect.tangent, isect.bitangent) * absDot(wi, isect.normal);
+        if (pdfLight > EPSILON && !isBlack) {
+            vec3 f = evalMaterial(bMaterials[isect.material], wo, wi, isect.normal, isect.uv, isect.tangent, isect.bitangent) * absDot(wi, isect.normal);
 
 #ifdef MIS
-        pdf = pdfMaterial(bMaterials[isect.material], wo, wi, isect.tangent, isect.bitangent, isect.normal);
-        weight = powerHeuristic(1.0, pdfLight, 1.0, pdf);
+            pdf = pdfMaterial(bMaterials[isect.material], wo, wi, isect.tangent, isect.bitangent, isect.normal);
+            weight = powerHeuristic(lightSampleCount, pdfLight, brdfSampleCount, pdf);
 #endif
 
 #ifdef DEBUG_VISIBILITY
-        return vec3(geom);
+            return vec3(geom);
 #endif
 
-        isBlack = dot(f, f) < EPSILON;
-        if (!isBlack) {
-            Ld += Li * f * geom * weight / pdfLight;
+            isBlack = dot(f, f) < EPSILON;
+            if (!isBlack) {
+                Ld += Li * f * geom * weight / pdfLight / lightSampleCount;
+            }
         }
     }
+    
 
 #ifdef MIS
-    seed = isect.position.xy;
-    sampleMaterial(bMaterials[isect.material], wo, isect.normal, wi, isect.tangent, isect.bitangent, pdf, isDelta, seed);
-    bsdf = evalMaterial(bMaterials[isect.material], wo, wi, isect.normal, isect.uv, isect.tangent, isect.bitangent);
-    if (!isDelta) {
-        bsdf = bsdf * absDot(wi, isect.normal);
-    }
-
-    isBlack = dot(bsdf, bsdf) < EPSILON;
-    if (!isBlack && pdf > EPSILON) {
-        vec3 P = isect.position;
-        {
-            Intersection isect0 = initIntersection();
-            Ray ray0 = initRay(P, wi);
-            ray.isShadowRay = true;
-            intersectBVH(ray0, isect0);
-            isBlack = true;
-            if (type == SAMPLE_AREA_LIGHTS && isect0.hit && bMaterials[isect0.material].emission.w > 0 && dot(wi, isect0.normal) < 0) {
-                pdfLight = 1.0 / uLightTotalArea;
-                Li = bMaterials[isect0.material].emission.rgb;
-                isBlack = false;
-            }
-            else if (type == SAMPLE_SUN && !isect0.hit && dot(uSunDirection, wi) > (1.0 - uSunSolidAngle * TWO_PI)) {
-                pdfLight = 1.0 / uSunSolidAngle;
-                Li = uSunRadiance;
-                isBlack = false;
-            }
-            else if (type == SAMPLE_ENVMAP && !isect0.hit) {
-                pdfLight = INV_TWO_PI;
-                Li = getEnvmapLight(wi);
-                isBlack = false;
-            }
+    for (int i = 0; i < brdfSampleCount; i++) {
+        sampleMaterial(bMaterials[isect.material], wo, isect.normal, wi, isect.tangent, isect.bitangent, pdf, isDelta);
+        bsdf = evalMaterial(bMaterials[isect.material], wo, wi, isect.normal, isect.uv, isect.tangent, isect.bitangent);
+        if (!isDelta) {
+            bsdf = bsdf * absDot(wi, isect.normal);
         }
 
-        weight = powerHeuristic(1.0, pdf, 1.0, pdfLight);
+        isBlack = dot(bsdf, bsdf) < EPSILON;
+        if (!isBlack && pdf > EPSILON) {
+            vec3 P = isect.position;
+            {
+                Intersection isect0 = initIntersection();
+                Ray ray0 = initRay(P, wi);
+                ray.isShadowRay = true;
+                intersectBVH(ray0, isect0);
+                isBlack = true;
+                if (type == SAMPLE_AREA_LIGHTS && isect0.hit && bMaterials[isect0.material].emission.w > 0 && dot(wi, isect0.normal) < 0) {
+                    pdfLight = 1.0 / uLightTotalArea;
+                    Li = bMaterials[isect0.material].emission.rgb;
+                    isBlack = false;
+                }
+                else if (type == SAMPLE_SUN && !isect0.hit && dot(uSunDirection, wi) > (1.0 - uSunSolidAngle * TWO_PI)) {
+                    pdfLight = 1.0 / uSunSolidAngle;
+                    Li = uSunRadiance;
+                    isBlack = false;
+                }
+                else if (type == SAMPLE_ENVMAP && !isect0.hit) {
+                    pdfLight = INV_TWO_PI;
+                    Li = getEnvmapLight(wi);
+                    isBlack = false;
+                }
+            }
 
-        if (!isBlack) {
-            Ld += Li * bsdf * weight / pdf;
+            weight = powerHeuristic(brdfSampleCount, pdf, lightSampleCount, pdfLight);
+
+            if (!isBlack) {
+                Ld += Li * bsdf * weight / pdf / brdfSampleCount;
+            }
         }
     }
 #endif
-#endif
-    seed = isect.position.yx;
-    sampleMaterial(bMaterials[isect.material], wo, isect.normal, wi, isect.tangent, isect.bitangent, pdf, isDelta, seed);
+
+    sampleMaterial(bMaterials[isect.material], wo, isect.normal, wi, isect.tangent, isect.bitangent, pdf, isDelta);
     bsdf = evalMaterial(bMaterials[isect.material], wo, wi, isect.normal, isect.uv, isect.tangent, isect.bitangent);
     if (!isDelta) bsdf *= absDot(wi, isect.normal);
 
@@ -982,10 +980,11 @@ void main() {
             float pdf = 0.0;
 
             if (bMaterials[isect.material].info.z > 0) {
-                sampleMaterial(bMaterials[isect.material], -ray.d, isect.normal, wi, isect.tangent, isect.bitangent, pdf, ray.isDelta, vec2(isect.position.xy + vec2(1.221122, 8.888888)));
+                sampleMaterial(bMaterials[isect.material], -ray.d, isect.normal, wi, isect.tangent, isect.bitangent, pdf, ray.isDelta);
                 attenuation *= evalMaterial(bMaterials[isect.material], -ray.d, wi, isect.normal, isect.uv, isect.tangent, isect.bitangent);
                 
                 ray.d = wi;
+                ray.invD = 1.0 / wi;
                 vec3 offset = dot(isect.normal, wi) < 0 ? -isect.normal * OFFSET_RAY_ORIGIN_DELTA : isect.normal * OFFSET_RAY_ORIGIN_DELTA;
                 ray.o = isect.position + offset;
                 ++depth;
@@ -1004,6 +1003,7 @@ void main() {
             }
 
             ray.d = wi;
+            ray.invD = 1.0 / wi;
             vec3 offset = dot(isect.normal, wi) < 0 ? -isect.normal * OFFSET_RAY_ORIGIN_DELTA : isect.normal * OFFSET_RAY_ORIGIN_DELTA;
             ray.o = isect.position + offset;
 
@@ -1017,7 +1017,6 @@ void main() {
         color += L;
     }   
 
-    color /= uSamplesPerFrame;
     imageStore(uRenderTarget, pixel, vec4(color, 1.0));
-    imageStore(uSampleCounter, pixel, vec4(1 / float(uCurrentFrame + uSamplesPerFrame) * uSamplesPerFrame, 0.0, 0.0, 1.0));
+    imageStore(uSampleCounter, pixel, vec4(1 / float(uCurrentFrame + uSamplesPerFrame), 0.0, 0.0, 1.0));
 }

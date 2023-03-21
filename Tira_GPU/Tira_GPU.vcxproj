@@ -44,6 +44,7 @@
     <ClInclude Include="OpenGL\timer.h" />
     <ClInclude Include="OpenGL\util.h" />
     <ClInclude Include="OpenGL\window.h" />
+    <ClInclude Include="threadpool.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp" />

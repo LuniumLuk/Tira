@@ -7,6 +7,7 @@
 #include <cmath>
 #include <tira.h>
 
+// [TODO] To run in local windows debugger, change the following ASSET_DIR to "../Asset/"
 #ifndef ASSET_DIR
 #define ASSET_DIR "./Asset/"
 #endif

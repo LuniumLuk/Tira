@@ -17,8 +17,9 @@ A Tiny Physically Based Renderer for ZJU Computer Graphics 2022 Course Project
 | [CornellBox-Oak](https://casual-effects.com/g3d/data10/index.html#mesh37)     | ![](./Image/CornellBox-Oak_64.png)          | 64 SPP, 1024x1024, by RTX 2070s in 5 mins 24 secs.            |
 | [sponza](https://casual-effects.com/g3d/data10/index.html#mesh10)             | ![](./Image/sponza_64.png)                  | 64 SPP, 2400x1600, by RTX 2070s in 23 mins (lit by sunlight). |
 | [fireplace_room](https://casual-effects.com/g3d/data10/index.html#mesh13)     | ![](./Image/fireplace_room_512.png)         | 512 SPP, 2400x1600, by RTX 2070s in 4 hours.                  |
-| geometry sets (created by blender)                                            | ![](./Image/Set0_1024.png)                  | 1024 SPP, 2048x2048, by RTX 2070s in 6 mins (lit by sunlight).|
-| geometry sets (created by blender)                                            | ![](./Image/Set0_2048.png)                  | 2048 SPP, 2048x2048, by RTX 2070s in 15 mins (lit by envmap). |
+| geometry sets (created by blender)                                            | ![](./Image/Set0_1024.png)                  | 1024 SPP, 2048x2048, by GTX 960 in 6 mins (lit by sunlight).  |
+| geometry sets (created by blender)                                            | ![](./Image/Set0_2048.png)                  | 2048 SPP, 2048x2048, by GTX 960 in 15 mins (lit by envmap).   |
+| geometry sets (created by blender)                                            | ![](./Image/Set1_2048.png)                  | 2048 SPP, 2048x2048, by GTX 960 in 36 mins.                   |
 
 ## Features
 

@@ -290,10 +290,10 @@ auto App::update(double deltaTime) noexcept -> void {
     }
 
     if (duration < 0.05) {
-        samplesPerFrame += 1;
+        samplesPerFrame = std::min(256, samplesPerFrame + (samplesPerFrame + 1) / 2);
     }
     else {
-        samplesPerFrame = std::max(1, samplesPerFrame - 1);
+        samplesPerFrame = std::max(1, samplesPerFrame - (samplesPerFrame + 1) / 2);
     }
 }
 

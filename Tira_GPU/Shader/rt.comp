@@ -67,7 +67,7 @@ const int MAX_DEPTH                 = 1;
 const int MAX_DEPTH                 = 8;
 #endif
 const float T_MIN                   = 1e-4;
-const float EPSILON                 = 1e-6;
+const float EPSILON                 = 1e-8;
 const float FLT_MAX                 = 1e+30;
 const float FLT_MIN                 = 1e-30;
 const float PI                      = 3.14159265;
@@ -699,7 +699,6 @@ void sampleMaterialGlass(in Material mat, in vec3 wo, in vec3 N, out vec3 wi, in
     float eta = backFace ? mat.info.y : 1.0 / mat.info.y;
     vec3 normal = backFace ? -N : N;
 
-    // [TODO] Apply this to CPU version
     float cosTheta = dot(wo, normal);
     float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
 
@@ -792,7 +791,6 @@ vec3 calculateDirectLight(in int type, in int depth, in Ray ray, in Intersection
     float pdfLight = 0.0;
     float geom = 1.0;
     pdf = 0.0;
-    bool isBlack = false;
     // MIS weight
     float weight = 1.0;
     int lightSampleCount = 1;
@@ -821,9 +819,7 @@ vec3 calculateDirectLight(in int type, in int depth, in Ray ray, in Intersection
             Li = getEnvmapLight(wi);
         }
 
-        isBlack = dot(Li, Li) < EPSILON;
-
-        if (pdfLight > EPSILON && !isBlack) {
+        if (pdfLight > EPSILON) {
             vec3 f = evalMaterial(bMaterials[isect.material], wo, wi, isect.normal, isect.uv, isect.tangent, isect.bitangent) * absDot(wi, isect.normal);
 
 #ifdef MIS
@@ -834,11 +830,7 @@ vec3 calculateDirectLight(in int type, in int depth, in Ray ray, in Intersection
 #ifdef DEBUG_VISIBILITY
             return vec3(geom);
 #endif
-
-            isBlack = dot(f, f) < EPSILON;
-            if (!isBlack) {
-                Ld += Li * f * geom * weight / pdfLight / lightSampleCount;
-            }
+            Ld += Li * f * geom * weight / pdfLight / lightSampleCount;
         }
     }
     
@@ -851,37 +843,31 @@ vec3 calculateDirectLight(in int type, in int depth, in Ray ray, in Intersection
             bsdf = bsdf * absDot(wi, isect.normal);
         }
 
-        isBlack = dot(bsdf, bsdf) < EPSILON;
-        if (!isBlack && pdf > EPSILON) {
+        if (pdf > EPSILON) {
             vec3 P = isect.position;
             {
                 Intersection isect0 = initIntersection();
                 Ray ray0 = initRay(P, wi);
                 ray.isShadowRay = true;
                 intersectBVH(ray0, isect0);
-                isBlack = true;
+                Li = vec3(0.0);
                 if (type == SAMPLE_AREA_LIGHTS && isect0.hit && bMaterials[isect0.material].emission.w > 0 && dot(wi, isect0.normal) < 0) {
                     pdfLight = 1.0 / uLightTotalArea;
                     Li = bMaterials[isect0.material].emission.rgb;
-                    isBlack = false;
                 }
                 else if (type == SAMPLE_SUN && !isect0.hit && dot(uSunDirection, wi) > (1.0 - uSunSolidAngle * TWO_PI)) {
                     pdfLight = 1.0 / uSunSolidAngle;
                     Li = uSunRadiance;
-                    isBlack = false;
                 }
                 else if (type == SAMPLE_ENVMAP && !isect0.hit) {
                     pdfLight = INV_TWO_PI;
                     Li = getEnvmapLight(wi);
-                    isBlack = false;
                 }
             }
 
             weight = powerHeuristic(brdfSampleCount, pdf, lightSampleCount, pdfLight);
 
-            if (!isBlack) {
-                Ld += Li * bsdf * weight / pdf / brdfSampleCount;
-            }
+            Ld += Li * bsdf * weight / pdf / brdfSampleCount;
         }
     }
 #endif
@@ -1011,7 +997,7 @@ void main() {
         }
 
         if (isnan(L.r) || isnan(L.g) || isnan(L.b) || isinf(L.r) || isinf(L.g) || isinf(L.b)) {
-            L = vec3(0.0);
+            continue;
         }
 
         color += L;

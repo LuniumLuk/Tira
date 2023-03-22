@@ -87,6 +87,7 @@ struct App : public Application {
     int mTotalTiles = 0;
     std::unique_ptr<GL::Texture2D> mEnvmap = nullptr;
     tira::Timer mTimer;
+    std::unique_ptr<GL::Texture2D> mEnvmapWeight = nullptr;
 };
 
 auto App::init() noexcept -> void {
@@ -136,6 +137,7 @@ auto App::init() noexcept -> void {
 
     if (scene.envmap) {
         mEnvmap = std::make_unique<GL::Texture2D>(scene.envmap->width, scene.envmap->height, GL::InternalFormat::FloatRGB, scene.envmap->data);
+        mEnvmapWeight = std::make_unique<GL::Texture2D>(scene.envmap->weight_grid_size, scene.envmap->weight_grid_size, GL::InternalFormat::FloatRED, scene.envmap->weight);
     }
 
     Root::get()->assetManager->LoadTexture2D("rt_sample_counter", imageW, imageH, GL::InternalFormat::FloatRED);
@@ -219,8 +221,12 @@ auto App::update(double deltaTime) noexcept -> void {
     Root::get()->assetManager->GetShader("rt_compute_shader")->setBool("uEnableEnvmap", mEnvmap != nullptr);
     Root::get()->assetManager->GetShader("rt_compute_shader")->setFloat("uEnvmapScale", scene.envmap_scale);
     Root::get()->assetManager->GetShader("rt_compute_shader")->setInt("uMaxDepth", maxDepth);
+    Root::get()->assetManager->GetShader("rt_compute_shader")->setInt("uEnvmapWeightGridSize", scene.envmap->weight_grid_size);
     for (int i = 0; i < mTextures.size(); ++i) mTextures[i].bind(i);
-    if (mEnvmap) mEnvmap->bind(30);
+    if (mEnvmap) {
+        mEnvmap->bind(30);
+        mEnvmapWeight->bind(31);
+    }
 
     glBindImageTexture(0, Root::get()->assetManager->GetFrameBuffer("rt_render_target")->colorAttachments[0].handle, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
     glBindImageTexture(1, Root::get()->assetManager->GetTexture("rt_sample_counter")->handle, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
@@ -287,15 +293,16 @@ auto App::update(double deltaTime) noexcept -> void {
 
     ImGui::End();
 
-    if (tile.SPP >= SPP) {
-        mTiles.pop();
-    }
-
     if (duration < 0.05) {
         samplesPerFrame = std::min(256, samplesPerFrame + (samplesPerFrame + 1) / 2);
     }
     else {
         samplesPerFrame = std::max(1, samplesPerFrame - (samplesPerFrame + 1) / 2);
+    }
+
+    if (tile.SPP >= SPP) {
+        mTiles.pop();
+        samplesPerFrame = 1;
     }
 }
 

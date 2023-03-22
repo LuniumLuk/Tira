@@ -119,6 +119,35 @@ namespace tira {
 
             stbi_image_free(_data);
         }
+
+        // Initialize weight map.
+        weight = new float[weight_grid_size * weight_grid_size];
+        calc_weights();
+    }
+
+    void TextureEnv::calc_weights(int num_samples) {
+        float total_weight = 0.0f;
+        float delta_theta = PI / weight_grid_size;
+        float delta_phi = TWO_PI / weight_grid_size;
+        for (int i = 0; i < weight_grid_size; ++i) {
+            for (int j = 0; j < weight_grid_size; ++j) {
+                float theta = i * delta_theta;
+                float phi = j * delta_phi;
+                float total_intensity = 0.0f;
+                for (int s = 0; s < num_samples; ++s) {
+                    float2 xi = hammersley(s, num_samples);
+                    colorf Li = sample(spherical_to_cartesian(theta, phi));
+                    total_intensity += color_to_luminance(Li);
+                }
+                float mean_intensity = total_intensity / num_samples;
+                weight[i * weight_grid_size + j] = mean_intensity;
+                total_weight += mean_intensity;
+            }
+        }
+
+        for (int i = 0; i < weight_grid_size * weight_grid_size; ++i) {
+            weight[i] /= total_weight;
+        }
     }
 
     TextureEnv::~TextureEnv() {

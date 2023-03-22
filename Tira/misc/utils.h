@@ -106,8 +106,8 @@ namespace tira {
 
     constexpr unsigned int HAMMERSLEY_N = 1024;
 
-    inline float2 hammersley(float i) {
-        unsigned int b = (unsigned int)(i * HAMMERSLEY_N);
+    inline float2 hammersley(float i, unsigned int N = HAMMERSLEY_N) {
+        unsigned int b = (unsigned int)(i * N);
 
         b = (b << 16u) | (b >> 16u);
         b = ((b & 0x55555555u) << 1u) | ((b & 0xAAAAAAAAu) >> 1u);

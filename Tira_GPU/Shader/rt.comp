@@ -42,6 +42,7 @@ uniform int uSamplesPerFrame;
 uniform bool uEnableEnvmap;
 uniform float uEnvmapScale;
 uniform int uMaxDepth;
+uniform int uEnvmapWeightGridSize;
 
 #define SAMPLE_SUN          0
 #define SAMPLE_AREA_LIGHTS  1
@@ -56,6 +57,7 @@ uniform int uMaxDepth;
 #define ENABLE_ALPHA_TEST
 
 layout (binding = 30) uniform sampler2D uEnvmap;
+layout (binding = 31) uniform sampler2D uEnvmapWeight;
 
 const float T_MIN                   = 1e-4;
 const float EPSILON                 = 1e-8;
@@ -120,15 +122,6 @@ vec3 getCameraRayDir(in int i, in ivec2 pixel, in ivec2 dim) {
     float y = (float(pixel.y) + u.y - 0.5) / dim.y * 2 - 1;
 
     return uScreenToRaster * vec3(x, y, 1);
-}
-
-vec3 sampleUnitHemisphere(vec2 u) {
-    float phi = u.y * TWO_PI;
-    float z = abs(1 - 2 * u.x);
-    float r = sqrt(1 - z * z);
-    float x = r * cos(phi);
-    float y = r * sin(phi);
-    return vec3(x, y, z);
 }
 
 struct Triangle {
@@ -463,6 +456,21 @@ vec3 sphericalToCartesian(in float sinTheta, in float cosTheta, in float phi) {
         cosTheta);
 }
 
+vec3 sampleUnitHemisphere(vec2 u) {
+    float phi = u.y * TWO_PI;
+    float z = abs(1 - 2 * u.x);
+    float r = sqrt(1 - z * z);
+    float x = r * cos(phi);
+    float y = r * sin(phi);
+    return vec3(x, y, z);
+}
+
+vec3 sampleUnitSphere(vec2 u) {
+    float phi = u.y * TWO_PI;
+    float theta = acos(1 - 2 * u.x);
+    return sphericalToCartesian(theta, phi);
+}
+
 vec3 localToWorld(in vec3 dir, in vec3 N) {
     // [NOTE] Serious bug here when old code is:
     // vec3 B;
@@ -504,11 +512,32 @@ void sampleSun(in vec3 P, in vec3 N, inout Intersection isect, inout vec3 wi, in
 
 void sampleEnvmap(in vec3 P, in vec3 N, inout Intersection isect, inout vec3 wi, inout float pdf, inout float visibility) {
     vec2 u = vec2(rand(), rand());
+#ifdef SAMPLE_ENVMAP_WITH_HEMISPHERE
     vec3 dir = sampleUnitHemisphere(u);
     wi = normalize(localToWorld(dir, N));
     pdf = INV_TWO_PI;
-
     visibility = visibilityTestHit(P, wi);
+#else
+    float deltaTheta = PI / uEnvmapWeightGridSize;
+    float deltaPhi = TWO_PI / uEnvmapWeightGridSize;
+    float p = rand();
+    float cdf = 0.0;
+    for (int i = 0; i < uEnvmapWeightGridSize; ++i) {
+        for (int j = 0; j < uEnvmapWeightGridSize; ++j) {
+            float w = texture(uEnvmapWeight, vec2(float(i) / uEnvmapWeightGridSize, float(j) / uEnvmapWeightGridSize)).r;
+            cdf += w;
+            if (cdf > p) {
+                float theta = j * deltaTheta;
+                float phi = i * deltaPhi;
+                pdf = w / (sin(theta) * deltaTheta * deltaPhi);
+                wi = sphericalToCartesian(theta + deltaTheta * rand(), phi + deltaPhi * rand());
+                visibility = visibilityTestHit(P, wi);
+                return;
+            } 
+        }
+    }
+#endif
+
 }
 
 float colorToLuminance(in vec3 color) {

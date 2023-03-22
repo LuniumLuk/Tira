@@ -4,7 +4,7 @@ A Tiny Physically Based Renderer for ZJU Computer Graphics 2022 Course Project
 
 [Course Page](http://10.76.1.181/courses/graphics/2022/) - only available in ZJU internal network
 
-![](./Image/spot.png)
+![](./Image/orbs_256.png)
 
 ## Gallery
 
@@ -19,10 +19,9 @@ A Tiny Physically Based Renderer for ZJU Computer Graphics 2022 Course Project
 | [CornellBox-Oak](https://casual-effects.com/g3d/data10/index.html#mesh37)     | ![](./Image/CornellBox-Oak_64.png)          | 64 SPP, 1024x1024, by RTX 2070s in 5 mins 24 secs.            |
 | [sponza](https://casual-effects.com/g3d/data10/index.html#mesh10)             | ![](./Image/sponza_64.png)                  | 64 SPP, 2400x1600, by RTX 2070s in 23 mins (lit by sunlight). |
 | [fireplace_room](https://casual-effects.com/g3d/data10/index.html#mesh13)     | ![](./Image/fireplace_room_512.png)         | 512 SPP, 2400x1600, by RTX 2070s in 4 hours.                  |
-| geometry sets (created by blender)                                            | ![](./Image/Set0_1024.png)                  | 1024 SPP, 2048x2048, by GTX 960 in 6 mins (lit by sunlight).  |
-| geometry sets (created by blender)                                            | ![](./Image/Set0_2048.png)                  | 2048 SPP, 2048x2048, by GTX 960 in 15 mins (lit by envmap).   |
+| [teapot](https://casual-effects.com/g3d/data10/index.html#mesh35)             | ![](./Image/teapot_2048.png)                | 2048 SPP, 1024x1024, by RTX 2070s in 9 mins (lit by sunlight).|
+| [teapot](https://casual-effects.com/g3d/data10/index.html#mesh35)             | ![](./Image/teapot_4096.png)                | 4096 SPP, 2048x2048, by RTX 2070s in 48 mins (lit by envmap). |
 | geometry sets (created by blender)                                            | ![](./Image/Set1_2048.png)                  | 2048 SPP, 2048x2048, by GTX 960 in 36 mins.                   |
-| [Mori Knob](https://casual-effects.com/g3d/data10/index.html#mesh23)          | ![](./Image/orbs_256.png)                   | 256 SPP, 1600x1200, by RTX 2070s in 5 hours 36 mins.          |
 
 ## Features
 

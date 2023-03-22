@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<camera type="perspective" width="1024" height="1024" fovy="40">
+	<eye x="0.0" y="1.0" z="3.6"/> 
+	<lookat x="0.0" y="1.0" z="0.0"/> 
+	<up x="0.0" y="1.0" z="0.0"/> 
+</camera>
+<light mtlname="light" radiance="17.0, 12.0, 4.0"/>
+
+<!-- 
+  Integrator settings:
+    - spp: Samples per Pixel
+    - mis: Use MIS in renderer
+    - maxbounce: Max bounce or depth in renderer
+    - robustlight: Enable light to be intersect with larger tollerance
+-->
+<integrator spp="64" mis="false" maxbounce="8" robustlight="false" />
+<!-- 
+  Scene settings:
+    - scale: Scale the scene in case the scene is too small or too large
+    - accel: Acceleration structure type 'bvh' | 'octree'
+-->
+<scene scale="1.0" accel="bvh" />
+<!-- 
+  Envmap settings:
+    - url: URL of envmap, envmap must be in equirectangular projection
+    - scale: Scale of envmap intensity
+-->
+<!--
+	<envmap url="asset/envmap/indoor.exr" scale="1.0" />
+-->
+<!-- 
+  Sunlight settings:
+    - direction: Direction toward sun
+    - radiance: Sun radiance
+    - solidangle: Sun solid angle
+-->
+<!--
+	<sunlight direction="0.8, 1.0, -0.5" radiance="20, 20, 20" solidangle="0.0687" />
+-->
+<!-- 
+  Sphere primitive (Currently only available in CPU version):
+    - mtlname: Material name as in .mtl file
+    - center: Sphere center position (in world coordinates)
+    - radius: Sphere radius (in world coordinates)
+-->
+<!-- 
+	<sphere mtlname="material_0" center="0.0, 1.0, 1.0" radius="0.1" />
+-->
+<!-- 
+  GPU compute shader kernel settings:
+    - size: Tile size
+    - macro: Shader additional macros
+-->
+<kernel size="64" macro="" />

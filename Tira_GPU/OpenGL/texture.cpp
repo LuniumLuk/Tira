@@ -53,7 +53,7 @@ Texture2D::Texture2D(std::string const& filename, bool hdr, bool genMipmap, bool
         }
         else
         {
-            std::cout << "Texture2D failed to load at path: " << filename << std::endl;
+            std::cout << "[Tira_GPU] " << "Texture2D failed to load at path: " << filename << std::endl;
             stbi_image_free(data);
         }
     }
@@ -66,7 +66,7 @@ Texture2D::Texture2D(std::string const& filename, bool hdr, bool genMipmap, bool
         }
         else
         {
-            std::cout << "Texture2D failed to load at path: " << filename << std::endl;
+            std::cout << "[Tira_GPU] " << "Texture2D failed to load at path: " << filename << std::endl;
             stbi_image_free(data);
         }
     }
@@ -141,7 +141,7 @@ Cubemap::Cubemap(std::vector<std::string> const& filenames, bool genMipmap, bool
         }
         else
         {
-            std::cout << "Cubemap failed to load at path: " << filenames[i] << std::endl;
+            std::cout << "[Tira_GPU] " << "Cubemap failed to load at path: " << filenames[i] << std::endl;
             stbi_image_free(data);
         }
     }

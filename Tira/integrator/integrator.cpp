@@ -15,9 +15,9 @@ namespace tira {
     void Integrator::render(Image& image, Scene const& scene, int spp) {
 
 #ifdef _OPENMP
-        std::cout << "OpenMP max threads: " << omp_get_max_threads() << "\n";
+        std::cout << "[Tira] OpenMP max threads: " << omp_get_max_threads() << "\n";
 #endif
-        std::cout << "SPP: " << spp << " Width: " << scene.scr_w << " Height: " << scene.scr_h << "\n";
+        std::cout << "[Tira] SPP: " << spp << " Width: " << scene.scr_w << " Height: " << scene.scr_h << "\n";
 
         ImageFloat buffer(scene.scr_w, scene.scr_h);
 
@@ -39,7 +39,7 @@ namespace tira {
         }
         print_progress2(spp - 1, spp, timer.delta_time(), timer.total_time());
         auto elapsed = timer.total_time();
-        std::cout << "\nTotal time: " << elapsed << "s\n";
+        std::cout << "\n[Tira] Total time: " << elapsed << "s\n";
 
         for (int y = 0; y < image.height; ++y) for (int x = 0; x < image.width; ++x) {
             auto color = buffer.color_at(x, y);

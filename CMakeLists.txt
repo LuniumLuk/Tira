@@ -21,7 +21,8 @@ add_executable(${PROJECT_NAME}
     Tira/thirdparty/stb_impl.cpp
     Tira/window/gui.cpp
     Tira/window/win32.cpp
-    Tira/window/macos.mm
+    # [TODO] Fix objective-c++ compile error with cmake
+    # Tira/window/macos.mm
     Tira_CPU/main.cpp)
 
 find_package(OpenMP)
@@ -30,5 +31,5 @@ if(OpenMP_CXX_FOUND)
 endif()
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
-add_compile_definitions(ASSET_DIR="../Asset/")
+add_compile_definitions(ROOT_DIR="../")
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)

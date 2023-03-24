@@ -463,14 +463,14 @@ auto FrameBuffer::attach(AttachmentType type, InternalFormat format, size_t bind
     }
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        std::cout << "Framebuffer is not complete" << std::endl;
+        std::cout << "[Tira_GPU] " << "Framebuffer is not complete" << std::endl;
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 auto FrameBuffer::bindColorAttachmentAsTexture(unsigned int attachment, unsigned int binding) -> void {
     if (attachment >= colorAttachments.size()) {
-        std::cout << "attachment index greater than current color attachments" << std::endl;
+        std::cout << "[Tira_GPU] " << "attachment index greater than current color attachments" << std::endl;
         return;
     }
     glActiveTexture(GL_TEXTURE0 + binding);
@@ -512,7 +512,7 @@ auto FrameBuffer::ClearDepth() -> void {
 
 auto FrameBuffer::bindDepthAttachmentAsTexture(unsigned int binding) -> void {
     if (depthAttachment.handle == 0) {
-        std::cout << "no depth attachment can be bind as texture" << std::endl;
+        std::cout << "[Tira_GPU] " << "no depth attachment can be bind as texture" << std::endl;
         return;
     }
     glActiveTexture(GL_TEXTURE0 + binding);

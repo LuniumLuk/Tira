@@ -126,9 +126,9 @@ auto App::init() noexcept -> void {
     auto areaLightList = getAreaLights(scene);
 
     // [TODO] Use 2D Texture Array instead.
-    std::cout << "[GL] Load " << textures.size() << " textures\n";
+    std::cout << "[Tira_GPU] Load " << textures.size() << " textures\n";
     if (textures.size() > MAX_MATERIAL_TEXTURE_COUNT) {
-        std::cout << "[GL] Do not support more than " << MAX_MATERIAL_TEXTURE_COUNT << " textures\n";
+        std::cout << "[Tira_GPU] Do not support more than " << MAX_MATERIAL_TEXTURE_COUNT << " textures\n";
     }
 
     Root::get()->assetManager->LoadShaderProgramCompute("rt_compute_shader", "rt.comp", generateShaderMacros(useMIS, acceptIntersectionCloseToLight, textures.size(), scene.kernel_info.macro));
@@ -308,8 +308,8 @@ auto App::update(double deltaTime) noexcept -> void {
 
 auto App::quit() noexcept -> void {
     endTime = Root::get()->timer->totalTime();
-    std::cout << "[GL] Total render time: " << (endTime - startTime) << "s\n";
-    std::cout << "[GL] Writing image ... please wait ...\n";
+    std::cout << "[Tira_GPU] Total render time: " << (endTime - startTime) << "s\n";
+    std::cout << "[Tira_GPU] Writing image ... please wait ...\n";
 
     size_t w = imageW;
     size_t h = imageH;
@@ -342,11 +342,11 @@ auto App::quit() noexcept -> void {
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
-        std::cout << "Using Default Scene: " << sceneName << "\n";
+        std::cout << "[Tira_GPU] Using Default Scene: " << sceneName << "\n";
     }
     else {
         sceneName = std::string(argv[1]);
-        std::cout << "Using Input Scene: " << sceneName << "\n";
+        std::cout << "[Tira_GPU] Using Input Scene: " << sceneName << "\n";
     }
 
     scene.load(
@@ -414,7 +414,7 @@ std::string generateShaderMacros(bool useMIS, bool acceptIntersectionCloseToLigh
     }
     textures << "return vec4(1.0, 0.0, 1.0, 1.0);\n}\n";
 
-    std::cout << "[GL] Shader macros:\n" << macros << "\n";
+    std::cout << "[Tira_GPU] Shader macros:\n" << macros << "\n";
 
     return macros + textures.str();
 }

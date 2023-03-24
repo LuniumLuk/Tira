@@ -1,6 +1,6 @@
 # Tira
 
-A Tiny Physically Based Renderer for ZJU Computer Graphics 2022 Course Project
+A Tiny Physically Based Renderer for ZJU Computer Graphics 2022 Course Project to do Path Tracing with CPU & GPU (GLSL Compute Shader)
 
 [Course Page](http://10.76.1.181/courses/graphics/2022/) - only available in ZJU internal network
 
@@ -25,27 +25,31 @@ A Tiny Physically Based Renderer for ZJU Computer Graphics 2022 Course Project
 
 ## Features
 
-- [x] Basic ray tracing utilities (math, geometry, transform)
+- [x] Basic ray tracing utilities (math, geometry, transform) from scratch
 - [x] BVH/Octree acceleration structures
 - [x] Load provided scene (.obj + .xml)
-- [x] Other primitives (sphere)
+- [x] Primitives (sphere)
+- [x] Directional light & Environment map support
 - [x] Whitted style ray tracer
 - [x] Monte Carlo path tracer
-- [ ] Bidirectional path tracer
+- [ ] Bidirectional path tracer (under construction)
 - [x] Materials (Blinn-Phong BRDF + Disney BRDF + Glass BSDF)
-- [x] OpenGL compute shader acceleration
+- [x] GPU acceleration (OpenGL compute shader)
 
 ## Compile and Run
 
 ### Visual Studio
 
-Open `Tira.sln` with Visual Studio 2022 or other version, the Executable file `Tira.exe` will be output to root directory. Use parameter to render other scene:
+Open `Tira.sln` with Visual Studio 2022 (or other version, need to retarget the project), select `Tira_CPU` or `Tira_GPU` as startup project and build. The Executable file `Tira_CPU.exe` and `Tira_GPU.exe` will be output to root directory. Use parameter to render other scene:
 
 ```shell
-./Tira.exe cornell-box
+./Tira_CPU.exe cornell-box
+./Tira_GPU.exe cornell-box
 ```
 
-Note: the `{SCENE}.obj` and `{SCENE}.xml` must be placed under `{SCENE}/` folder in `Asset/` folder. Go to `Asset/` folder for an example.
+Note: the `{SCENE}.obj` and `{SCENE}.xml` must be placed under `Asset/{SCENE}/` folder. Go to `Asset/CornellBox-Original` folder for an example.
+
+**Note** Compile this project in release mode for performance
 
 ### Cmake
 
@@ -53,29 +57,22 @@ Note: the `{SCENE}.obj` and `{SCENE}.xml` must be placed under `{SCENE}/` folder
 mkdir Build
 cd Build
 cmake ..
+make
 ```
 
-**Note** compile this project in release mode for performance
+## GPU Version
 
-## OpenGL
+This project also provided an GPU version for path trace acceleration. The GPU version is dependent on the CPU version for acceleration sturcture construction.
 
-This project also provided an OpenGL compute shader version for acceleration. The OpenGL version highly depend on original Tira project, including scene, acceleration structure, material.
-
-Open `Tira.sln` and set Tira_GPU as startup project, build and run. The build executable file will be output to root directory. Use command line to render other scene:
+To compile the GPU version, open `Tira.sln` in Visual Studio 2022 (or other version) and set `Tira_GPU` as startup project and build. The executable file `Tira_GPU.exe` will be output to the root directory. Use command line as follow:
 
 ```shell
-./Tira_GPU.exe cornell-box
+Tira_GPU.exe cornell-box
 ```
 
 ## XML Extension
 
-I extend the original xml file for scene description as follow:
-
-- Add integrator description
-- Add scene description
-- Add envmap description
-- Add sunlight description
-- Add sphere description
+I extend the original xml file for the following additional info:
 
 ```xml
 <!-- 
@@ -83,7 +80,7 @@ I extend the original xml file for scene description as follow:
     - spp: Samples per Pixel
     - mis: Use MIS in renderer
     - maxbounce: Max bounce or depth in renderer
-    - robustlight: Enable light to be intersect with larger tollerance
+    - robustlight: Enable light to be hit with larger tollerance
 -->
 <integrator spp="256" mis="true" maxbounce="8" robustlight="true" />
 <!-- 

@@ -260,7 +260,7 @@ namespace tira {
         int second = total_time * (spp - s - 1) / (s + 1);
         int minute = second / 60;
         int hour = minute / 60;
-        std::cout << "[";
+        std::cout << "[Tira] [";
         int pos = bar_width * progress;
         for (int i = 0; i < bar_width; ++i) {
             if (i < pos) std::cout << "=";
@@ -275,7 +275,7 @@ namespace tira {
     }
 
     inline void print_progress(float progress, float estimated_time, int bar_width = 50) {
-        std::cout << "[";
+        std::cout << "[Tira] [";
         int pos = bar_width * progress;
         for (int i = 0; i < bar_width; ++i) {
             if (i < pos) std::cout << "=";

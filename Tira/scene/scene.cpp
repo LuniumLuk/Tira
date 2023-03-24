@@ -61,7 +61,7 @@ namespace tira {
         }
 
         if (!reader.Warning().empty()) {
-            std::cout << "TinyObjReader: " << reader.Warning();
+            std::cout << "[Tira] " << "TinyObjReader: " << reader.Warning();
         }
 
         // Open xml file.
@@ -110,7 +110,7 @@ namespace tira {
                         material->emissive = true;
                     }
                     materials.push_back(static_cast<Material*>(material));
-                    std::cout << "load " << *material << "\n";
+                    std::cout << "[Tira] " << "load " << *material << "\n";
                     break;
                 }
 #endif
@@ -138,7 +138,7 @@ namespace tira {
                 }
 
                 materials.push_back(static_cast<Material*>(material));
-                std::cout << "load " << *material << "\n";
+                std::cout << "[Tira] " << "load " << *material << "\n";
             }
             break;
             case MaterialType::DisneyBSDF:
@@ -160,7 +160,7 @@ namespace tira {
                 material->name = m.name;
 
                 materials.push_back(static_cast<Material*>(material));
-                std::cout << "load " << *material << "\n";
+                std::cout << "[Tira] " << "load " << *material << "\n";
             }
             break;
             }
@@ -235,11 +235,11 @@ namespace tira {
             objects.push_back((Object*)s);
         }
 
-        std::cout << "Materials load: " << materials.size() << "\n";
-        std::cout << "Objects load: " << objects.size() << "\n";
+        std::cout << "[Tira] " << "Materials load: " << materials.size() << "\n";
+        std::cout << "[Tira] " << "Objects load: " << objects.size() << "\n";
 
         timer.update();
-        std::cout << "Scene load elapsed time: " << timer.delta_time() << "s\n";
+        std::cout << "[Tira] " << "Scene load elapsed time: " << timer.delta_time() << "s\n";
 
         // Load camera specs.
         if (doc.child("camera").attribute("type").as_string() == std::string("perspective")) {
@@ -281,7 +281,7 @@ namespace tira {
         if (!doc.child("envmap").empty()) {
             load_envmap(doc.child("envmap").attribute("url").as_string());
             envmap_scale = doc.child("envmap").attribute("scale").as_float();
-            std::cout << "Using envmap, url: " << doc.child("envmap").attribute("url").as_string() << "\n";
+            std::cout << "[Tira] " << "Using envmap, url: " << doc.child("envmap").attribute("url").as_string() << "\n";
         }
 
         // Load sunlight specs.
@@ -293,7 +293,7 @@ namespace tira {
             (sscanf(node.attribute("radiance").as_string(), "%f,%f,%f", &sun_radiance.x, &sun_radiance.y, &sun_radiance.z));
             sun_solid_angle = node.attribute("solidangle").as_float();
 
-            std::cout << "Using sunlight, direction: " << sun_direction << ", radiance: " << sun_radiance << "\n";
+            std::cout << "[Tira] " << "Using sunlight, direction: " << sun_direction << ", radiance: " << sun_radiance << "\n";
         }
 
         // Load integrator specs.
@@ -319,11 +319,11 @@ namespace tira {
         case AcceleratorType::Octree:
             accel = new OctreeAccel(); break;
         }
-        std::cout << "Building accleration Structure ... please wait ...\n";
+        std::cout << "[Tira] " << "Building accleration Structure ... please wait ...\n";
         timer.update();
         accel->build(std::forward<std::vector<Object*>>(objects));
         timer.update();
-        std::cout << "Accleration Structure build elapsed time: " << timer.delta_time() << "s\n";
+        std::cout << "[Tira] " << "Accleration Structure build elapsed time: " << timer.delta_time() << "s\n";
 
         setup_lights();
     }
@@ -395,8 +395,8 @@ namespace tira {
                 lights_cdf.push_back(lights_total_area);
             }
         }
-        std::cout << "Lights: " << lights.size() << "\n";
-        std::cout << "Lights total area: " << lights_total_area << "\n";
+        std::cout << "[Tira] " << "Lights: " << lights.size() << "\n";
+        std::cout << "[Tira] " << "Lights total area: " << lights_total_area << "\n";
     }
 
     void Scene::sample_light(float3 const& P, Intersection& isect, float3& wi, float& pdf, float& geom) const {
@@ -488,7 +488,7 @@ namespace tira {
     }
 
     bool Scene::hit_sun(float3 const& wi) const {
-        return std::abs(dot(sun_direction, wi) > (1.0f - sun_solid_angle * TWO_PI));
+        return std::abs(dot(sun_direction, wi)) > (1.0f - sun_solid_angle * TWO_PI);
     }
 
     std::vector<float2> generate_poisson_dist(size_t num) {

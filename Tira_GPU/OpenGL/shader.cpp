@@ -27,7 +27,7 @@ Shader::Shader(char const* const code, ShaderType type) {
     glGetShaderiv(handle, GL_COMPILE_STATUS, &success);
     if (!success) {
         glGetShaderInfoLog(handle, 512, nullptr, infoLog);
-        std::cout << "Shader::Shader compile failed" << infoLog << std::endl;
+        std::cout << "[Tira_GPU] " << "Shader::Shader compile failed" << infoLog << std::endl;
     }
 }
 
@@ -47,7 +47,7 @@ ShaderProgram::ShaderProgram(std::initializer_list<Shader*> shaders) {
     glGetProgramiv(handle, GL_LINK_STATUS, &success);
     if (!success) {
         glGetProgramInfoLog(handle, 512, NULL, infoLog);
-        std::cout << "Shader::ShaderProgram link failed" << infoLog << std::endl;
+        std::cout << "[Tira_GPU] " << "Shader::ShaderProgram link failed" << infoLog << std::endl;
     }
 }
 

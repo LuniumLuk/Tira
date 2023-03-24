@@ -21,7 +21,7 @@ auto _glCheckError(const char* file, int line) -> void {
         case GL_OUT_OF_MEMORY:                 error = "OUT_OF_MEMORY"; break;
         case GL_INVALID_FRAMEBUFFER_OPERATION: error = "INVALID_FRAMEBUFFER_OPERATION"; break;
         }
-        std::cout << error << " | " << file << " (" << line << ")" << std::endl;
+        std::cout << "[Tira_GPU] " << error << " | " << file << " (" << line << ")" << std::endl;
     }
 }
 
@@ -43,37 +43,36 @@ auto APIENTRY glDebugOutput(GLenum source,
     // ignore non-significant error/warning codes
     if (id == 131169 || id == 131185 || id == 131218 || id == 131204) return;
 
-    std::cout << "---------------" << std::endl;
-    std::cout << "Debug message (" << id << "): " << message << std::endl;
+    std::cout << "[Tira_GPU] " << "---------------" << std::endl;
+    std::cout << "[Tira_GPU] " << "Debug message (" << id << "): " << message << std::endl;
 
     switch (source) {
-    case GL_DEBUG_SOURCE_API:             std::cout << "Source: API"; break;
-    case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   std::cout << "Source: Window System"; break;
-    case GL_DEBUG_SOURCE_SHADER_COMPILER: std::cout << "Source: Shader Compiler"; break;
-    case GL_DEBUG_SOURCE_THIRD_PARTY:     std::cout << "Source: Third Party"; break;
-    case GL_DEBUG_SOURCE_APPLICATION:     std::cout << "Source: Application"; break;
-    case GL_DEBUG_SOURCE_OTHER:           std::cout << "Source: Other"; break;
+    case GL_DEBUG_SOURCE_API:             std::cout << "[Tira_GPU] " << "Source: API"; break;
+    case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   std::cout << "[Tira_GPU] " << "Source: Window System"; break;
+    case GL_DEBUG_SOURCE_SHADER_COMPILER: std::cout << "[Tira_GPU] " << "Source: Shader Compiler"; break;
+    case GL_DEBUG_SOURCE_THIRD_PARTY:     std::cout << "[Tira_GPU] " << "Source: Third Party"; break;
+    case GL_DEBUG_SOURCE_APPLICATION:     std::cout << "[Tira_GPU] " << "Source: Application"; break;
+    case GL_DEBUG_SOURCE_OTHER:           std::cout << "[Tira_GPU] " << "Source: Other"; break;
     } std::cout << std::endl;
 
     switch (type) {
-    case GL_DEBUG_TYPE_ERROR:               std::cout << "Type: Error"; break;
-    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: std::cout << "Type: Deprecated Behaviour"; break;
-    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  std::cout << "Type: Undefined Behaviour"; break;
-    case GL_DEBUG_TYPE_PORTABILITY:         std::cout << "Type: Portability"; break;
-    case GL_DEBUG_TYPE_PERFORMANCE:         std::cout << "Type: Performance"; break;
-    case GL_DEBUG_TYPE_MARKER:              std::cout << "Type: Marker"; break;
-    case GL_DEBUG_TYPE_PUSH_GROUP:          std::cout << "Type: Push Group"; break;
-    case GL_DEBUG_TYPE_POP_GROUP:           std::cout << "Type: Pop Group"; break;
-    case GL_DEBUG_TYPE_OTHER:               std::cout << "Type: Other"; break;
+    case GL_DEBUG_TYPE_ERROR:               std::cout << "[Tira_GPU] " << "Type: Error"; break;
+    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: std::cout << "[Tira_GPU] " << "Type: Deprecated Behaviour"; break;
+    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  std::cout << "[Tira_GPU] " << "Type: Undefined Behaviour"; break;
+    case GL_DEBUG_TYPE_PORTABILITY:         std::cout << "[Tira_GPU] " << "Type: Portability"; break;
+    case GL_DEBUG_TYPE_PERFORMANCE:         std::cout << "[Tira_GPU] " << "Type: Performance"; break;
+    case GL_DEBUG_TYPE_MARKER:              std::cout << "[Tira_GPU] " << "Type: Marker"; break;
+    case GL_DEBUG_TYPE_PUSH_GROUP:          std::cout << "[Tira_GPU] " << "Type: Push Group"; break;
+    case GL_DEBUG_TYPE_POP_GROUP:           std::cout << "[Tira_GPU] " << "Type: Pop Group"; break;
+    case GL_DEBUG_TYPE_OTHER:               std::cout << "[Tira_GPU] " << "Type: Other"; break;
     } std::cout << std::endl;
 
     switch (severity) {
-    case GL_DEBUG_SEVERITY_HIGH:         std::cout << "Severity: high"; break;
-    case GL_DEBUG_SEVERITY_MEDIUM:       std::cout << "Severity: medium"; break;
-    case GL_DEBUG_SEVERITY_LOW:          std::cout << "Severity: low"; break;
-    case GL_DEBUG_SEVERITY_NOTIFICATION: std::cout << "Severity: notification"; break;
+    case GL_DEBUG_SEVERITY_HIGH:         std::cout << "[Tira_GPU] " << "Severity: high"; break;
+    case GL_DEBUG_SEVERITY_MEDIUM:       std::cout << "[Tira_GPU] " << "Severity: medium"; break;
+    case GL_DEBUG_SEVERITY_LOW:          std::cout << "[Tira_GPU] " << "Severity: low"; break;
+    case GL_DEBUG_SEVERITY_NOTIFICATION: std::cout << "[Tira_GPU] " << "Severity: notification"; break;
     } std::cout << std::endl;
-    std::cout << std::endl;
 }
 
 auto scrollCallback(GLFWwindow* window, double xoffset, double yoffset) -> void
@@ -142,7 +141,7 @@ Window::Window(WindowDesc const& desc) {
         int flags;
         glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
         if (flags & GL_CONTEXT_FLAG_DEBUG_BIT) {
-            std::cout << "GLFW debug output successfully initialized!" << std::endl;
+            std::cout << "[Tira_GPU] " << "GLFW debug output successfully initialized!" << std::endl;
             glEnable(GL_DEBUG_OUTPUT);
             glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
             glDebugMessageCallback(glDebugOutput, nullptr);

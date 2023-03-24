@@ -18,7 +18,7 @@ namespace tira {
         channel = 4;
 
         if (!_data) {
-            std::cout << "Error loading image: " << path << "\n";
+            std::cout << "[Tira] " << "Error loading image: " << path << "\n";
             return;
         }
 
@@ -84,9 +84,9 @@ namespace tira {
             int ret = LoadEXR(&_data, &width, &height, path.c_str(), &err);
 
             if (ret != TINYEXR_SUCCESS) {
-                std::cout << "Error loading EXR image: " << path << "\n";
+                std::cout << "[Tira] " << "Error loading EXR image: " << path << "\n";
                 if (err) {
-                    std::cout << err << "\n";
+                    std::cout << "[Tira] " << err << "\n";
                     FreeEXRErrorMessage(err);
                 }
             }
@@ -107,7 +107,7 @@ namespace tira {
             float* _data = stbi_loadf(path.c_str(), &width, &height, &channel, 3);
 
             if (!_data) {
-                std::cout << "Error loading HDR image: " << path << "\n";
+                std::cout << "[Tira] " << "Error loading HDR image: " << path << "\n";
                 return;
             }
 

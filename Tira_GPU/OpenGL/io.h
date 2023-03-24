@@ -31,7 +31,7 @@ inline auto readFile(Filepath const& path) noexcept -> std::string
         return buffer.str();
     }
     else {
-        std::cout << "IO::readFile failed: " << path << std::endl;
+        std::cout << "[Tira_GPU] " << "IO::readFile failed: " << path << std::endl;
         return std::string();
     }
 }
@@ -45,7 +45,7 @@ inline auto writeFile(Filepath const& path, void* data, size_t size) noexcept ->
         return true;
     }
     else {
-        std::cout << "IO::writeFile failed: " << path << std::endl;
+        std::cout << "[Tira_GPU] " << "IO::writeFile failed: " << path << std::endl;
     }
     return false;
 }

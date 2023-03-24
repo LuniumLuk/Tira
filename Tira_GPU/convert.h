@@ -41,7 +41,7 @@ static glm::vec3 to_vec3(tira::float3 const& v) { return { v.x, v.y, v.z }; }
 inline std::vector<GL::Triangle> getTriangleList(tira::Scene const& scene) {
     auto const& objs = scene.accel->objects;
     auto const& mats = scene.materials;
-    std::cout << "[GL] Triangle count: " << objs.size() << "\n";
+    std::cout << "[Tira_GPU] Triangle count: " << objs.size() << "\n";
 
     std::vector<GL::Triangle> list;
     for (auto o : objs) {
@@ -83,7 +83,7 @@ inline std::vector<GL::Triangle> getTriangleList(tira::Scene const& scene) {
 
 inline std::vector<GL::Material> getMaterialList(tira::Scene const& scene, std::vector<tira::Texture*>& textures) {
     auto const& mats = scene.materials;
-    std::cout << "[GL] Material count: " << mats.size() << "\n";
+    std::cout << "[Tira_GPU] Material count: " << mats.size() << "\n";
 
     std::vector<GL::Material> list;
     for (auto m : mats) {
@@ -127,8 +127,8 @@ inline std::vector<GL::Material> getMaterialList(tira::Scene const& scene, std::
 
 inline std::vector<GL::BVHNode> getBVHNodeList(tira::Scene const& scene) {
     auto const& bvh = *reinterpret_cast<tira::BVHAccel*>(scene.accel);
-    std::cout << "[GL] BVHNode count: " << bvh.nodes.size() << "\n";
-    std::cout << "[GL] BVH max height: " << bvh.max_height << std::endl;
+    std::cout << "[Tira_GPU] BVHNode count: " << bvh.nodes.size() << "\n";
+    std::cout << "[Tira_GPU] BVH max height: " << bvh.max_height << std::endl;
 
     std::vector<GL::BVHNode> list;
     for (auto n : bvh.nodes) {

@@ -44,6 +44,12 @@ if (from_last_fixed > fixed_delta) {                                    \
 // Generate random float from 0 to 1.
 #define rnd() (static_cast<float>(rand())/static_cast<float>(RAND_MAX))
 
+// Check required item exist.
+#define REQUIRED_ATTRIBUTE(node, attr) if(node.attribute(attr).empty()){throw std::runtime_error(std::string("[Tira] Required attribute not found: ")+attr);}
+
+// Check scammed item count.
+#define CHECK_SCANNED_ITEMS(scan, count) if(scan!=count){std::cout<<"[Tira] Unexpected scanned item count at: "<<#scan<<"\n";}
+
 namespace tira {
 
     // Convert float value in scene to integer value in image space.

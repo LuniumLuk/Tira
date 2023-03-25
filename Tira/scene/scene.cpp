@@ -227,9 +227,13 @@ namespace tira {
         /////////////////////////////////////////////
 
         for (auto& node : doc.children("sphere")) {
+            REQUIRED_ATTRIBUTE(node, "mtlname");
+            REQUIRED_ATTRIBUTE(node, "center");
+            REQUIRED_ATTRIBUTE(node, "radius");
+
             std::string name = node.attribute("mtlname").as_string();
             auto s = new Sphere{};
-            (sscanf(node.attribute("center").as_string(), "%f,%f,%f", &s->center.x, &s->center.y, &s->center.z));
+            CHECK_SCANNED_ITEMS(sscanf(node.attribute("center").as_string(), "%f,%f,%f", &s->center.x, &s->center.y, &s->center.z), 3);
             s->radius = node.attribute("radius").as_float();
             s->calc_area();
             s->calc_bound();
@@ -248,33 +252,50 @@ namespace tira {
         std::cout << "[Tira] " << "Scene load elapsed time: " << timer.delta_time() << "s\n";
 
         // Load camera specs.
-        if (doc.child("camera").attribute("type").as_string() == std::string("perspective")) {
-            scr_w = doc.child("camera").attribute("width").as_int();
-            scr_h = doc.child("camera").attribute("height").as_int();
-            float fov = doc.child("camera").attribute("fovy").as_float();
+        if (doc.child("camera").empty()) {
+            throw std::runtime_error("Camera tag is required");
+        }
+
+        {
+            auto const& node = doc.child("camera");
+            REQUIRED_ATTRIBUTE(node, "type");
+            REQUIRED_ATTRIBUTE(node, "width");
+            REQUIRED_ATTRIBUTE(node, "height");
+            REQUIRED_ATTRIBUTE(node, "fovy");
+
+            if (node.attribute("type").as_string() != std::string("perspective")) {
+                throw std::runtime_error("Only support perspective type camera so far");
+            }
+
+            scr_w = node.attribute("width").as_int();
+            scr_h = node.attribute("height").as_int();
+            float fov = node.attribute("fovy").as_float();
             camera.fov = deg2rad(fov);
             camera.aspect = (float)scr_w / scr_h;
+
+            auto eye = node.child("eye");
+            camera.eye.x = eye.attribute("x").as_float() * scene_scale;
+            camera.eye.y = eye.attribute("y").as_float() * scene_scale;
+            camera.eye.z = eye.attribute("z").as_float() * scene_scale;
+
+            auto at = node.child("lookat");
+            camera.at.x = at.attribute("x").as_float() * scene_scale;
+            camera.at.y = at.attribute("y").as_float() * scene_scale;
+            camera.at.z = at.attribute("z").as_float() * scene_scale;
+
+            auto up = node.child("up");
+            camera.up.x = up.attribute("x").as_float();
+            camera.up.y = up.attribute("y").as_float();
+            camera.up.z = up.attribute("z").as_float();
         }
-        auto eye = doc.child("camera").child("eye");
-        camera.eye.x = eye.attribute("x").as_float() * scene_scale;
-        camera.eye.y = eye.attribute("y").as_float() * scene_scale;
-        camera.eye.z = eye.attribute("z").as_float() * scene_scale;
-
-        auto at = doc.child("camera").child("lookat");
-        camera.at.x = at.attribute("x").as_float() * scene_scale;
-        camera.at.y = at.attribute("y").as_float() * scene_scale;
-        camera.at.z = at.attribute("z").as_float() * scene_scale;
-
-        auto up = doc.child("camera").child("up");
-        camera.up.x = up.attribute("x").as_float();
-        camera.up.y = up.attribute("y").as_float();
-        camera.up.z = up.attribute("z").as_float();
 
         // Load extra material specs.
         for (auto& node : doc.children("light")) {
+            REQUIRED_ATTRIBUTE(node, "mtlname");
+            REQUIRED_ATTRIBUTE(node, "radiance");
             std::string name = node.attribute("mtlname").as_string();
             float3 radiance;
-            (sscanf(node.attribute("radiance").as_string(), "%f,%f,%f", &radiance.x, &radiance.y, &radiance.z));
+            CHECK_SCANNED_ITEMS(sscanf(node.attribute("radiance").as_string(), "%f,%f,%f", &radiance.x, &radiance.y, &radiance.z), 3);
             for (auto& m : materials) {
                 if (m->name == name) {
                     m->emissive = true;
@@ -285,35 +306,49 @@ namespace tira {
 
         // Load envmap specs.
         if (!doc.child("envmap").empty()) {
-            load_envmap(doc.child("envmap").attribute("url").as_string());
-            envmap_scale = doc.child("envmap").attribute("scale").as_float();
-            std::cout << "[Tira] " << "Using envmap, url: " << doc.child("envmap").attribute("url").as_string() << "\n";
+            auto const& node = doc.child("envmap");
+            REQUIRED_ATTRIBUTE(node, "url");
+            load_envmap(node.attribute("url").as_string());
+            if (!node.attribute("scale").empty())
+                envmap_scale = node.attribute("scale").as_float();
+            std::cout << "[Tira] " << "Using envmap, url: " << node.attribute("url").as_string() << "\n";
         }
 
         // Load sunlight specs.
         if (!doc.child("sunlight").empty()) {
             auto const& node = doc.child("sunlight");
+            REQUIRED_ATTRIBUTE(node, "direction");
+            REQUIRED_ATTRIBUTE(node, "radiance");
             sun_enabled = true;
-            (sscanf(node.attribute("direction").as_string(), "%f,%f,%f", &sun_direction.x, &sun_direction.y, &sun_direction.z));
+            CHECK_SCANNED_ITEMS(sscanf(node.attribute("direction").as_string(), "%f,%f,%f", &sun_direction.x, &sun_direction.y, &sun_direction.z), 3);
             sun_direction = normalize(sun_direction);
-            (sscanf(node.attribute("radiance").as_string(), "%f,%f,%f", &sun_radiance.x, &sun_radiance.y, &sun_radiance.z));
-            sun_solid_angle = node.attribute("solidangle").as_float();
+            CHECK_SCANNED_ITEMS(sscanf(node.attribute("radiance").as_string(), "%f,%f,%f", &sun_radiance.x, &sun_radiance.y, &sun_radiance.z), 3);
+            if (!node.attribute("solidangle").empty())
+                sun_solid_angle = node.attribute("solidangle").as_float();
 
             std::cout << "[Tira] " << "Using sunlight, direction: " << sun_direction << ", radiance: " << sun_radiance << "\n";
         }
 
         // Load integrator specs.
         if (!doc.child("integrator").empty()) {
-            integrator_info.spp = doc.child("integrator").attribute("spp").as_int();
-            integrator_info.use_mis = doc.child("integrator").attribute("mis").as_bool();
-            integrator_info.max_bounce = doc.child("integrator").attribute("maxbounce").as_int();
-            integrator_info.robust_light = doc.child("integrator").attribute("robustlight").as_bool();
+            auto const& node = doc.child("integrator");
+            REQUIRED_ATTRIBUTE(node, "spp");
+            integrator_info.spp = node.attribute("spp").as_int();
+            if (!node.attribute("mis").empty())
+                integrator_info.use_mis = node.attribute("mis").as_bool();
+            if (!node.attribute("maxbounce").empty())
+                integrator_info.max_bounce = node.attribute("maxbounce").as_int();
+            if (!node.attribute("robustlight").empty())
+                integrator_info.robust_light = node.attribute("robustlight").as_bool();
         }
 
         // Load tiling specs.
         if (!doc.child("kernel").empty()) {
-            kernel_info.size = doc.child("kernel").attribute("size").as_int();
-            kernel_info.macro = doc.child("kernel").attribute("macro").as_string();
+            auto const& node = doc.child("kernel");
+            REQUIRED_ATTRIBUTE(node, "size");
+            kernel_info.size = node.attribute("size").as_int();
+            if (!node.attribute("macro").empty())
+                kernel_info.macro = node.attribute("macro").as_string();
         }
 
         /////////////////////////////////////////////

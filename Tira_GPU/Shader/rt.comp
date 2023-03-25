@@ -53,8 +53,8 @@ uniform int uEnvmapWeightGridSize;
 // #define DEBUG_UV
 // #define DEBUG_DIFFUSE
 // #define VISIBILITY_TEST_DIST
-#define USE_MIS_HEURISTICS
-#define ENABLE_ALPHA_TEST
+// #define USE_MIS_HEURISTICS
+// #define ENABLE_ALPHA_TEST
 
 layout (binding = 30) uniform sampler2D uEnvmap;
 layout (binding = 31) uniform sampler2D uEnvmapWeight;

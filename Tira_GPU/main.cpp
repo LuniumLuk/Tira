@@ -15,12 +15,10 @@
 #include "glwrapper.h"
 #include "threadpool.h"
 
-// [TODO] To run in local windows debugger, change the following ASSET_DIR to "../Asset/"
 #ifndef ASSET_DIR
 #define ASSET_DIR "./Asset/"
 #endif
 
-// [TODO] To run in local windows debugger, change the following SHADER_DIR to "./Shader/"
 #ifndef SHADER_DIR
 #define SHADER_DIR "./Tira_GPU/Shader/"
 #endif
@@ -219,11 +217,11 @@ auto App::update(double deltaTime) noexcept -> void {
     Root::get()->assetManager->GetShader("rt_compute_shader")->setFloat("uSunSolidAngle", mSunSolidAngle);
     Root::get()->assetManager->GetShader("rt_compute_shader")->setVec3("uSunRadiance", mSunRadiance);
     Root::get()->assetManager->GetShader("rt_compute_shader")->setBool("uEnableEnvmap", mEnvmap != nullptr);
-    Root::get()->assetManager->GetShader("rt_compute_shader")->setFloat("uEnvmapScale", scene.envmap_scale);
     Root::get()->assetManager->GetShader("rt_compute_shader")->setInt("uMaxDepth", maxDepth);
-    Root::get()->assetManager->GetShader("rt_compute_shader")->setInt("uEnvmapWeightGridSize", scene.envmap->weight_grid_size);
     for (int i = 0; i < mTextures.size(); ++i) mTextures[i].bind(i);
     if (mEnvmap) {
+        Root::get()->assetManager->GetShader("rt_compute_shader")->setFloat("uEnvmapScale", scene.envmap_scale);
+        Root::get()->assetManager->GetShader("rt_compute_shader")->setInt("uEnvmapWeightGridSize", scene.envmap->weight_grid_size);
         mEnvmap->bind(30);
         mEnvmapWeight->bind(31);
     }

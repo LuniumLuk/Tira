@@ -1,5 +1,10 @@
 #pragma once
 
+#if defined(_MSC_VER)
+// 'APIENTRY': macro redefinition
+#pragma warning(disable : 4005)
+#endif
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <OpenGL/command.h>

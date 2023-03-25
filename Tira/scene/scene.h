@@ -44,6 +44,8 @@ namespace tira {
         float scene_scale = 1.f;
         IntegratorInfo integrator_info;
         TilingInfo kernel_info;
+        bool directional_area_light = false;
+        float directional_light_epsilon = 0.1;
 
         enum struct AcceleratorType {
             BVH,

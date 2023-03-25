@@ -10,10 +10,6 @@
 namespace tira {
 
     struct WhittedIntegrator : Integrator {
-
-        int max_depth = 8;
-        float russian_roulette = 0.8f;
-
         virtual float3 get_pixel_color(int x, int y, int sample_id, Scene const& scene) override;
     };
 

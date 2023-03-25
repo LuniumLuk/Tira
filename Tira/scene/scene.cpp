@@ -76,6 +76,12 @@ namespace tira {
         if (!doc.child("scene").empty()) {
             scene_scale = doc.child("scene").attribute("scale").as_float();
             auto type = doc.child("scene").attribute("accel").as_string();
+            if (!doc.child("scene").attribute("dirlight").empty()) {
+                directional_area_light = doc.child("scene").attribute("dirlight").as_bool();
+            }
+            if (!doc.child("scene").attribute("direps").empty()) {
+                directional_light_epsilon = doc.child("scene").attribute("direps").as_float();
+            }
             if (type == std::string("bvh")) {
                 accel_type = AcceleratorType::BVH;
             }
@@ -446,11 +452,19 @@ namespace tira {
                 // pdf = 1 / pdf_pos * pdf_dir;
                 // return ray;
 
-                float3 dir = random_float3_on_unit_hemisphere();
-                Ray ray(isect.position, local_to_world(dir, isect.normal));
-                emission = isect.material->emission;
-                pdf = INV_TWO_PI / lights_total_area;
-                return ray;
+                if (directional_area_light) {
+                    Ray ray(isect.position, isect.normal);
+                    emission = isect.material->emission;
+                    pdf = 1 / lights_total_area;
+                    return ray;
+                }
+                else {
+                    float3 dir = random_float3_on_unit_hemisphere();
+                    Ray ray(isect.position, local_to_world(dir, isect.normal));
+                    emission = isect.material->emission;
+                    pdf = 1 / lights_total_area;
+                    return ray;
+                }
             }
         }
         return Ray(float3::zero(), float3::zero()); // Should not occur.

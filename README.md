@@ -32,7 +32,7 @@ A Tiny Physically Based Renderer for ZJU Computer Graphics 2022 Course Project t
 - [x] Directional light & Environment map support
 - [x] Whitted style ray tracer
 - [x] Monte Carlo path tracer
-- [ ] Bidirectional path tracer (under construction)
+- [x] Bidirectional path tracer
 - [x] Materials (Blinn-Phong BRDF + Disney BRDF + Glass BSDF)
 - [x] GPU acceleration (OpenGL compute shader)
 

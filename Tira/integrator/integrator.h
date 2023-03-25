@@ -14,6 +14,10 @@ namespace tira {
         Timer timer;
         std::vector<float2> poisson_disk;
 
+        int max_depth = 8;
+        bool use_mis = true;
+        float russian_roulette = 0.8f;
+
         Integrator();
 
         void render(Image& image, Scene const& scene, int spp = 64);

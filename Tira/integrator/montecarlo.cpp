@@ -85,7 +85,7 @@ namespace tira {
             }
 #endif
 
-            if (pdf > EPSILON && dot(f, f) > EPSILON) {
+            if (pdf > EPSILON) {
                 attenuation = attenuation * f / pdf;
             }
 
@@ -144,12 +144,13 @@ namespace tira {
         float weight = 1.f;
 
         Intersection light_isect;
-        float3 Li;
+        float3 Li = float3::zero();
         switch (type) {
         case LightType::AreaLights:
             // Sampling the lights ---- area sampling strategy.
             scene.sample_light(isect.position, light_isect, wi, light_pdf, geom);
-            Li = light_isect.material->emission;
+            if (!scene.directional_area_light || std::abs(dot(wi, -light_isect.normal) > (1.0 - scene.directional_light_epsilon)))
+                Li = light_isect.material->emission;
             break;
         case LightType::SunLight:
             Li = scene.sample_sun(isect.position, isect.normal, wi, light_pdf, geom);
@@ -196,7 +197,8 @@ namespace tira {
                     switch (type) {
                     case LightType::AreaLights:
                         if (isect.hit && isect.material->emissive && dot(wi, isect.normal) < 0) {
-                            Li = isect.material->emission;
+                            if (!scene.directional_area_light || std::abs(dot(wi, -isect.normal) > (1.0 - scene.directional_light_epsilon)))
+                                Li = isect.material->emission;
                             light_pdf = 1 / scene.lights_total_area;
                             is_black = false;
                         }

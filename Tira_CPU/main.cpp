@@ -17,13 +17,15 @@ static std::string generate_output_filename(int spp, int w, int h, bool mis, std
 
 int main(int argc, char* argv[]) {
     Scene scene;
-    MonteCarloIntegrator integrator;
+    BidirectionalIntegrator integrator;
+    //MonteCarloIntegrator integrator;
 
     // Tira_CPU.exe scene_name
     // your obj file and xml file is supporsed to be:
     //  - ROOT_DIT/Asset/scene_name/scene_name.obj
     //  - ROOT_DIT/Asset/scene_name/scene_name.xml
-    std::string scene_name = DEFAULT_SCENE;
+    //std::string scene_name = DEFAULT_SCENE;
+    std::string scene_name = "CornellBox-Sphere";
     if (argc > 1) {
         scene_name = std::string(argv[1]);
         std::cout << "[Tira_CPU] Using Input Scene: " << scene_name << "\n";

@@ -83,6 +83,6 @@
 
 // Ver.3
 #define MAX_RAY_DEPTH 8
-#define NUM_LIGHT_SAMPLES 8
+#define NUM_LIGHT_SAMPLES 1
 
 #endif

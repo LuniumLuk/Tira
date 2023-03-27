@@ -95,8 +95,8 @@ namespace tira {
         }
 
         void calc_bound() {
-            bound.min = center - radius;
-            bound.max = center + radius;
+            bound.min = center - std::abs(radius);
+            bound.max = center + std::abs(radius);
         }
 
         void calc_area() {

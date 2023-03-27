@@ -53,10 +53,10 @@ namespace tira {
                     continue;
 
                 float pdf = 0.0f;
-                float3 L_path = eval_path(scene, camera_path, light_path, Le, t, s, pdf);
+                float3 L = eval_path(scene, camera_path, light_path, Le, t, s, pdf);
 
                 float w = pdf * pdf;
-                Ls[t - 1] += L_path * w;
+                Ls[t - 1] += L * w;
                 mis_weights[t - 1] += w;
             }
         }
@@ -69,8 +69,9 @@ namespace tira {
         {
             auto const& v = camera_path[t - 1];
             if (v.material->emissive) {
-                pdf = v.pdf;
-                return v.material->emission * v.attenuation;
+                if (dot(v.wo, v.normal) > 0)
+                    pdf = v.pdf;
+                    return v.material->emission * v.attenuation;
             }
         }
 
@@ -86,7 +87,7 @@ namespace tira {
                 Ray ray(v.position, wi);
                 scene.intersect(ray, isect);
                 if (isect.hit && isect.material->emissive && dot(wi, isect.normal) < 0) {
-                    if (!scene.directional_area_light || std::abs(dot(wi, -isect.normal) > (1.0 - scene.directional_light_epsilon)))
+                    if (!scene.directional_area_light || std::abs(dot(wi, -isect.normal) > (1.0 - scene.directional_area_light_solid_angle)))
                         return isect.material->emission * v.attenuation * v.material->eval(v.wo, wi, v.normal, v.uv, v.tangent, v.bitangent);
                 }
             }
@@ -97,7 +98,7 @@ namespace tira {
                 float geom;
                 float3 Li = float3::zero();
                 scene.sample_light(v.position, light_isect, wi, light_pdf, geom);
-                if (!scene.directional_area_light || std::abs(dot(wi, -light_isect.normal) > (1.0 - scene.directional_light_epsilon)))
+                if (!scene.directional_area_light || std::abs(dot(wi, -light_isect.normal) > (1.0 - scene.directional_area_light_solid_angle)))
                     Li = light_isect.material->emission;
 
                 if (light_pdf > EPSILON) {
@@ -125,14 +126,13 @@ namespace tira {
             pdf = vc.pdf * vl.pdf;
             L_indir = Le * f * geom * visibility;
 
-
             // Direct lighting.
             Intersection light_isect;
             float3 wi;
             float light_pdf;
             scene.sample_light(vc.position, light_isect, wi, light_pdf, geom);
             float3 Li = float3::zero();
-            if (!scene.directional_area_light || std::abs(dot(wi, -light_isect.normal) > (1.0 - scene.directional_light_epsilon)))
+            if (!scene.directional_area_light || std::abs(dot(wi, -light_isect.normal) > (1.0 - scene.directional_area_light_solid_angle)))
                 Li = light_isect.material->emission;
 
             if (light_pdf > EPSILON) {

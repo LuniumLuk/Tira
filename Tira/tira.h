@@ -17,7 +17,7 @@
 #include <math/matrix.h>
 
 #include <geometry/ray.h>
-#include <geometry/primitive.h>
+#include <geometry/sphere.h>
 #include <geometry/triangle.h>
 #include <geometry/object.h>
 

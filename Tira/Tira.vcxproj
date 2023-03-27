@@ -20,7 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="geometry\object.h" />
-    <ClInclude Include="geometry\primitive.h" />
+    <ClInclude Include="geometry\sphere.h" />
     <ClInclude Include="geometry\ray.h" />
     <ClInclude Include="geometry\triangle.h" />
     <ClInclude Include="integrator\bidirectional.h" />

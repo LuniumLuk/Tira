@@ -12,14 +12,20 @@
     - mis: Use MIS in renderer
     - maxbounce: Max bounce or depth in renderer
     - robustlight: Enable light to be intersect with larger tollerance
+    - type: Type of integrator 'whitted' | 'mc' | 'bdpt'
+      - clamp: Clamp settings, clamp each samples to suppress fireflies 
 -->
-<integrator spp="64" mis="false" maxbounce="8" robustlight="false" />
+<integrator spp="256" mis="false" maxbounce="8" robustlight="false" type="mc">
+  <clamp min="0.0" max="1000.0" />
+</integrator>
 <!-- 
   Scene settings:
     - scale: Scale the scene in case the scene is too small or too large
     - accel: Acceleration structure type 'bvh' | 'octree'
+    - dirlight: Area lights as directional emitters
+    - dirsolidangle: Directional emitters' solid angle
 -->
-<scene scale="1.0" accel="bvh" />
+<scene scale="1.0" accel="bvh" dirlight="false" dirsolidangle="0.1" />
 <!-- 
   Envmap settings:
     - url: URL of envmap, envmap must be in equirectangular projection

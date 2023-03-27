@@ -34,6 +34,13 @@ namespace tira {
     }
 
     template<typename T>
+    inline T clamp(T x, T min, T max) {
+        x = x < min ? min : x;
+        x = x > max ? max : x;
+        return x;
+    }
+
+    template<typename T>
     struct Vector2 {
         using dataType = T;
         union { dataType x, u; };
@@ -145,6 +152,13 @@ namespace tira {
             return Vector2{
                 saturate(x, static_cast<T>(0), static_cast<T>(1)),
                 saturate(y, static_cast<T>(0), static_cast<T>(1)),
+            };
+        }
+
+        Vector2 clamped(T min, T max) const {
+            return Vector2{
+                clamp(x, static_cast<T>(min), static_cast<T>(max)),
+                clamp(y, static_cast<T>(min), static_cast<T>(max)),
             };
         }
 
@@ -390,6 +404,14 @@ namespace tira {
             };
         }
 
+        Vector3 clamped(T min, T max) const {
+            return Vector3{
+                clamp(x, static_cast<T>(min), static_cast<T>(max)),
+                clamp(y, static_cast<T>(min), static_cast<T>(max)),
+                clamp(z, static_cast<T>(min), static_cast<T>(max)),
+            };
+        }
+
         T norm() const {
             return std::sqrt(x * x + y * y + z * z);
         }
@@ -584,6 +606,15 @@ namespace tira {
             };
         }
 
+        Vector4 clamped(T min, T max) const {
+            return Vector4{
+                clamp(x, static_cast<T>(min), static_cast<T>(max)),
+                clamp(y, static_cast<T>(min), static_cast<T>(max)),
+                clamp(z, static_cast<T>(min), static_cast<T>(max)),
+                clamp(w, static_cast<T>(min), static_cast<T>(max)),
+            };
+        }
+
         T norm() const {
             return std::sqrt(x * x + y * y + z * z + w * w);
         }
@@ -666,6 +697,21 @@ namespace tira {
     template<typename T>
     inline Vector4<T> saturate(Vector4<T> const& x) {
         return x.saturated();
+    }
+
+    template<typename T>
+    inline Vector2<T> clamp(Vector2<T> const& x, T min, T max) {
+        return x.clamped(min, max);
+    }
+
+    template<typename T>
+    inline Vector3<T> clamp(Vector3<T> const& x, T min, T max) {
+        return x.clamped(min, max);
+    }
+
+    template<typename T>
+    inline Vector4<T> clamp(Vector4<T> const& x, T min, T max) {
+        return x.clamped(min, max);
     }
 
     namespace transform {

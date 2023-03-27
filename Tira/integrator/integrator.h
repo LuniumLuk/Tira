@@ -17,6 +17,8 @@ namespace tira {
         int max_depth = 8;
         bool use_mis = true;
         float russian_roulette = 0.8f;
+        float clamp_min = 0.0f;
+        float clamp_max = 1.0f;
 
         Integrator();
 

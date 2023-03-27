@@ -22,11 +22,22 @@
 namespace tira {
 
     struct Scene {
+        enum struct IntegratorType {
+            Whitted,
+            MonteCarlo,
+            Bidirectional,
+        };
+
         struct IntegratorInfo {
+            IntegratorType type = IntegratorType::MonteCarlo;
             int spp = 1;
             bool use_mis = true;
             int max_bounce = 8;
             bool robust_light = true; // Accept intersection very close to light as light intersection.
+            struct Clamping {
+                float min = 0.0f;
+                float max = std::numeric_limits<float>::max();
+            } clamping;
         };
 
         struct TilingInfo {
@@ -45,7 +56,7 @@ namespace tira {
         IntegratorInfo integrator_info;
         TilingInfo kernel_info;
         bool directional_area_light = false;
-        float directional_light_epsilon = 0.1;
+        float directional_area_light_solid_angle = 0.1;
 
         enum struct AcceleratorType {
             BVH,

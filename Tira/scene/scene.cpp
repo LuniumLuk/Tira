@@ -7,7 +7,7 @@
 #include <math/matrix.h>
 #include <scene/scene.h>
 #include <geometry/triangle.h>
-#include <geometry/primitive.h>
+#include <geometry/sphere.h>
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <scene/bvh.h>
 #include <scene/octree.h>
@@ -74,13 +74,18 @@ namespace tira {
 
         // Load scene specs.
         if (!doc.child("scene").empty()) {
-            scene_scale = doc.child("scene").attribute("scale").as_float();
-            auto type = doc.child("scene").attribute("accel").as_string();
-            if (!doc.child("scene").attribute("dirlight").empty()) {
-                directional_area_light = doc.child("scene").attribute("dirlight").as_bool();
+            auto const& node = doc.child("scene");
+
+            REQUIRED_ATTRIBUTE(node, "scale");
+            REQUIRED_ATTRIBUTE(node, "accel");
+
+            scene_scale = node.attribute("scale").as_float();
+            auto type = node.attribute("accel").as_string();
+            if (!node.attribute("dirlight").empty()) {
+                directional_area_light = node.attribute("dirlight").as_bool();
             }
-            if (!doc.child("scene").attribute("direps").empty()) {
-                directional_light_epsilon = doc.child("scene").attribute("direps").as_float();
+            if (!node.attribute("dirsolidangle").empty()) {
+                directional_area_light_solid_angle = node.attribute("dirsolidangle").as_float();
             }
             if (type == std::string("bvh")) {
                 accel_type = AcceleratorType::BVH;
@@ -340,6 +345,17 @@ namespace tira {
                 integrator_info.max_bounce = node.attribute("maxbounce").as_int();
             if (!node.attribute("robustlight").empty())
                 integrator_info.robust_light = node.attribute("robustlight").as_bool();
+            if (!node.attribute("type").empty()) {
+                auto const& type = node.attribute("type").as_string();
+                if (type == std::string("whitted")) integrator_info.type = IntegratorType::Whitted;
+                if (type == std::string("mc")) integrator_info.type = IntegratorType::MonteCarlo;
+                if (type == std::string("bdpt")) integrator_info.type = IntegratorType::Bidirectional;
+            }
+
+            if (!node.child("clamp").empty()) {
+                integrator_info.clamping.min = node.child("clamp").attribute("min").as_float();
+                integrator_info.clamping.max = node.child("clamp").attribute("max").as_float();
+            }
         }
 
         // Load tiling specs.

@@ -43,7 +43,9 @@ namespace tira {
             }
 
             if (isect.material->emissive) {
-                if (depth == 0 || ray.is_delta) L += attenuation * isect.material->emission;
+                if (depth == 0 || ray.is_delta)
+                    if (dot(ray.direction, isect.normal) < 0)
+                        L += attenuation * isect.material->emission;
                 break;
             }
 
@@ -149,7 +151,7 @@ namespace tira {
         case LightType::AreaLights:
             // Sampling the lights ---- area sampling strategy.
             scene.sample_light(isect.position, light_isect, wi, light_pdf, geom);
-            if (!scene.directional_area_light || std::abs(dot(wi, -light_isect.normal) > (1.0 - scene.directional_light_epsilon)))
+            if (!scene.directional_area_light || dot(wi, -light_isect.normal) > (1.0 - scene.directional_area_light_solid_angle))
                 Li = light_isect.material->emission;
             break;
         case LightType::SunLight:
@@ -197,7 +199,7 @@ namespace tira {
                     switch (type) {
                     case LightType::AreaLights:
                         if (isect.hit && isect.material->emissive && dot(wi, isect.normal) < 0) {
-                            if (!scene.directional_area_light || std::abs(dot(wi, -isect.normal) > (1.0 - scene.directional_light_epsilon)))
+                            if (!scene.directional_area_light || dot(wi, -isect.normal) > (1.0 - scene.directional_area_light_solid_angle))
                                 Li = isect.material->emission;
                             light_pdf = 1 / scene.lights_total_area;
                             is_black = false;

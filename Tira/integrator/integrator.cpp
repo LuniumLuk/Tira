@@ -30,6 +30,7 @@ namespace tira {
                 for (int x = 0; x < image.width; ++x) {
                     auto color = get_pixel_color(x, y, s, scene);
                     if (isfinite(color)) {
+                        color = clamp(color, clamp_min, clamp_max);
                         buffer.increment_pixel(x, y, color);
                     }
                 }
@@ -59,7 +60,11 @@ namespace tira {
             for (int x = 0; x < image.width; ++x) {
                 colorf color;
                 for (int s = 0; s < spp; ++s) {
-                    color += get_pixel_color(x, y, s, scene);
+                    auto c = get_pixel_color(x, y, s, scene);
+                    if (isfinite(c)) {
+                        c = clamp(c, clamp_min, clamp_max);
+                        color += c;
+                    }
                 }
                 color = color / spp;
 

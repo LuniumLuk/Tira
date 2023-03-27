@@ -67,13 +67,6 @@ namespace tira {
         return x + 0.5f;
     }
 
-    template<typename T, typename U, typename V>
-    inline T clamp(T x, U min, V max) {
-        x = x < min ? min : x;
-        x = x > max ? max : x;
-        return x;
-    }
-
     template<typename T>
     inline T lerp(T x, T y, float a) {
         return x * (1.f - a) + y * a;

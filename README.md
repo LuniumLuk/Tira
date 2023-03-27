@@ -1,27 +1,32 @@
 # Tira
 
+<!--
+to compile by pandoc:
+pandoc README.md -o README.pdf
+-->
+
 A Tiny Physically Based Renderer for ZJU Computer Graphics 2022 Course Project to do Path Tracing with CPU & GPU (GLSL Compute Shader)
 
 [Course Page](http://10.76.1.181/courses/graphics/2022/) - only available in ZJU internal network
 
-![](./Doc/Image/orbs_256.png)
+![](./Doc/Image/small_orbs_256.png)
 
 ## Gallery
 
 | Model                                                                         | Rendered Image                              | Description                                                   |
 |-------------------------------------------------------------------------------|---------------------------------------------|---------------------------------------------------------------|
-| cornell-box (course)                                                          | ![](./Doc/Image/cornell-box_4096.png)           | 4096 SPP, 2048x2048, by RTX 2070s in 41 mins.                 |
-| staircase (course)                                                            | ![](./Doc/Image/staircase_512.png)              | 512 SPP, 2560x1440, by RTX 2070s in 24 mins.                  |
-| veach-mis (course)                                                            | ![](./Doc/Image/veach-mis_8192.png)             | 8192 SPP, 2560x1440, by RTX 2070s in 3 hours 20 mins.         |
-| [CornellBox-Original](https://casual-effects.com/g3d/data10/index.html#mesh5) | ![](./Doc/Image/CornellBox-Original_16384.png)  | 16384 SPP, 2048x2048, by RTX 2070s in 34 mins.                |
-| [CornellBox-Water](https://casual-effects.com/g3d/data10/index.html#mesh5)    | ![](./Doc/Image/CornellBox-Water_512.png)       | 512 SPP, 2048x2048, by RTX 2070s in 29 mins.                  |
-| [CornellBox-Sphere](https://casual-effects.com/g3d/data10/index.html#mesh5)   | ![](./Doc/Image/CornellBox-Sphere_512.png)      | 512 SPP, 1024x1024, by RTX 2070s.                             |
-| [CornellBox-Oak](https://casual-effects.com/g3d/data10/index.html#mesh37)     | ![](./Doc/Image/CornellBox-Oak_64.png)          | 64 SPP, 1024x1024, by RTX 2070s in 5 mins 24 secs.            |
-| [sponza](https://casual-effects.com/g3d/data10/index.html#mesh10)             | ![](./Doc/Image/sponza_64.png)                  | 64 SPP, 2400x1600, by RTX 2070s in 23 mins (lit by sunlight). |
-| [fireplace_room](https://casual-effects.com/g3d/data10/index.html#mesh13)     | ![](./Doc/Image/fireplace_room_512.png)         | 512 SPP, 2400x1600, by RTX 2070s in 4 hours.                  |
-| [teapot](https://casual-effects.com/g3d/data10/index.html#mesh35)             | ![](./Doc/Image/teapot_2048.png)                | 2048 SPP, 1024x1024, by RTX 2070s in 9 mins (lit by sunlight).|
-| [teapot](https://casual-effects.com/g3d/data10/index.html#mesh35)             | ![](./Doc/Image/teapot_4096.png)                | 4096 SPP, 2048x2048, by RTX 2070s in 48 mins (lit by envmap). |
-| geometry sets (created by blender)                                            | ![](./Doc/Image/Set1_2048.png)                  | 2048 SPP, 2048x2048, by GTX 960 in 36 mins.                   |
+| cornell-box (course)                                                          | ![](./Doc/Image/small_cornell-box_4096.png)           | 4096 SPP, 2048x2048, by RTX 2070s in 41 mins.                 |
+| staircase (course)                                                            | ![](./Doc/Image/small_staircase_512.png)              | 512 SPP, 2560x1440, by RTX 2070s in 24 mins.                  |
+| veach-mis (course)                                                            | ![](./Doc/Image/small_veach-mis_8192.png)             | 8192 SPP, 2560x1440, by RTX 2070s in 3 hours 20 mins.         |
+| [CornellBox-Original](https://casual-effects.com/g3d/data10/index.html#mesh5) | ![](./Doc/Image/small_CornellBox-Original_16384.png)  | 16384 SPP, 2048x2048, by RTX 2070s in 34 mins.                |
+| [CornellBox-Water](https://casual-effects.com/g3d/data10/index.html#mesh5)    | ![](./Doc/Image/small_CornellBox-Water_512.png)       | 512 SPP, 2048x2048, by RTX 2070s in 29 mins.                  |
+| [CornellBox-Sphere](https://casual-effects.com/g3d/data10/index.html#mesh5)   | ![](./Doc/Image/small_CornellBox-Sphere_512.png)      | 512 SPP, 1024x1024, by RTX 2070s.                             |
+| [CornellBox-Oak](https://casual-effects.com/g3d/data10/index.html#mesh37)     | ![](./Doc/Image/small_CornellBox-Oak_64.png)          | 64 SPP, 1024x1024, by RTX 2070s in 5 mins 24 secs.            |
+| [sponza](https://casual-effects.com/g3d/data10/index.html#mesh10)             | ![](./Doc/Image/small_sponza_64.png)                  | 64 SPP, 2400x1600, by RTX 2070s in 23 mins (lit by sunlight). |
+| [fireplace_room](https://casual-effects.com/g3d/data10/index.html#mesh13)     | ![](./Doc/Image/small_fireplace_room_512.png)         | 512 SPP, 2400x1600, by RTX 2070s in 4 hours.                  |
+| [teapot](https://casual-effects.com/g3d/data10/index.html#mesh35)             | ![](./Doc/Image/small_teapot_2048.png)                | 2048 SPP, 1024x1024, by RTX 2070s in 9 mins (lit by sunlight).|
+| [teapot](https://casual-effects.com/g3d/data10/index.html#mesh35)             | ![](./Doc/Image/small_teapot_4096.png)                | 4096 SPP, 2048x2048, by RTX 2070s in 48 mins (lit by envmap). |
+| geometry sets (created by blender)                                            | ![](./Doc/Image/small_Set1_2048.jpg)                  | 2048 SPP, 2048x2048, by GTX 960 in 36 mins.                   |
 
 ## Features
 

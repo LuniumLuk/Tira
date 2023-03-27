@@ -41,6 +41,20 @@ A Tiny Physically Based Renderer for ZJU Computer Graphics 2022 Course Project t
 - [x] Materials (Blinn-Phong BRDF + Disney BRDF + Glass BSDF)
 - [x] GPU acceleration (OpenGL compute shader)
 
+### Bidirectional Path Tracing
+
+Images from certain paths from Bidirectional Path Tracing. The scene features a directional area light and a glass egg in cornell box, the spread of the directional light is about 25.8 degree. The images are rendered in 400x320, with 8 SPP. Camera path length increases from left to right and the total path length increases from top to bottom.
+
+![](./Doc/Image/bdpt/bdpt0.jpg)
+
+Egg in cornell box scene, rendered in 800x640, with 256 SPP. The image in the left is rendered by bidirectional path tracing, the image in the right is rendered by unidirectional Monte-Carlo path tracing.
+
+![](./Doc/Image/bdpt/bdpt1.jpg)
+
+More results of bidirectional method (lower row) comparing to unidirectional method (upper row). The unidirectional results are rendered 4 times the SPP of the bidirectional results so that they are rendered in approximately the same time. Images of column 1 is original cornell box with light facing up; Images of column 2 feature a glass sphere (ior=1.5) with directional light; Image of column 3 and 4 feature a diamond (ior=2.5) in cornell box.
+
+![](./Doc/Image/bdpt/bdpt2.jpg)
+
 ## Compile and Run
 
 ### Visual Studio
@@ -85,15 +99,21 @@ I extend the original xml file for the following additional info:
     - spp: Samples per Pixel
     - mis: Use MIS in renderer
     - maxbounce: Max bounce or depth in renderer
-    - robustlight: Enable light to be hit with larger tollerance
+    - robustlight: Enable light to be intersect with larger tollerance
+    - type: Type of integrator 'whitted' | 'mc' | 'bdpt'
+      - clamp: Clamp settings, clamp each samples to suppress fireflies 
 -->
-<integrator spp="256" mis="true" maxbounce="8" robustlight="true" />
+<integrator spp="256" mis="false" maxbounce="8" robustlight="false" type="mc">
+  <clamp min="0.0" max="1000.0" />
+</integrator>
 <!-- 
   Scene settings:
     - scale: Scale the scene in case the scene is too small or too large
     - accel: Acceleration structure type 'bvh' | 'octree'
+    - dirlight: Area lights as directional emitters
+    - dirsolidangle: Directional emitters' solid angle
 -->
-<scene scale="1.0" accel="bvh" />
+<scene scale="1.0" accel="bvh" dirlight="false" dirsolidangle="0.1" />
 <!-- 
   Envmap settings:
     - url: URL of envmap, envmap must be in equirectangular projection

@@ -157,7 +157,7 @@ Tira supports three types of lighting:
 
 **Envmap light** can also be added by XML extension. Currently support only equirectangular envmaps in exr extension are supported. The envmap will be preprocessed to get a 16x16 lookup table for the probabilities of each region to sample for the region of higher radiance.
 
-![Utah teapot lit by envmap (blender `studio.exr`), rendered in 2048x2048 with 4096 SPP, by RTX 2070s in 48 mins.](./Image/small_teapot_4096.png){width=400px}
+![Utah teapot lit by envmap (blender `studio.exr`), rendered in 2048x2048 with 4096 SPP, by RTX 2070s in 48 mins.](./Image/large_teapot_4096.png){width=400px}
 
 ### 3.7 GPU Acceleration
 
@@ -175,21 +175,21 @@ The following session I will demonstrate some images rendered by this renderer. 
 
 For the default scenes provided in the course page, I doubled the image size to get better results.
 
-![cornell-box, rendered in 2048x2048 with 4096 SPP, by RTX 2070s in 41 mins.](./Image/small_cornell-box_4096.png){width=400px}
+![cornell-box, rendered in 2048x2048 with 4096 SPP, by RTX 2070s in 41 mins.](./Image/large_cornell-box_4096.png){width=400px}
 
-![staircase, rendered in 2560x1440 with 512 SPP, by RTX 2070s in 24 mins.](./Image/small_staircase_512.png){width=400px}
+![staircase, rendered in 2560x1440 with 512 SPP, by RTX 2070s in 24 mins.](./Image/large_staircase_512.png){width=400px}
 
-![veach-mis, rendered in 2560x1440 with 8192 SPP, by RTX 2070s in 3 hours 20 mins.](./Image/small_veach-mis_8192.png){width=400px}
+![veach-mis, rendered in 2560x1440 with 4096 SPP, by RTX 2070s in 1 hours 50 mins.](./Image/large_veach-mis_4096.png){width=400px}
 
 ### 4.2 Other scenes
 
 For my own scenes, I select some of the representative ones that each demonstrates some of the features of my renderer.
 
-![Test orbs by Yasutoshi Mori, a demonstration of pure diffuse, glossy metallic and colored glass materials respectively. The picture is rendered in 1600x1200 with 256 SPP in 5.6 hours by RTX 2070s.](./Image/small_orbs_256.png){width=400px}
+![Test orbs by Yasutoshi Mori, a demonstration of pure diffuse, glossy metallic and colored glass materials respectively. The picture is rendered in 1600x1200 with 256 SPP in 5.6 hours by RTX 2070s.](./Image/large_orbs_256.png){width=400px}
 
-![Oak tree in cornell box, a demonstration of alpha testing in intersection. Rendered in 1024x1024 with 64 SPP, by RTX 2070s in 5 mins 24 secs.](./Image/small_CornellBox-Oak_64.png){width=400px}
+![Oak tree in cornell box, a demonstration of alpha testing in intersection. Rendered in 2048x2048 with 256 SPP, by RTX 2070s in 84 mins.](./Image/large_CornellBox-Oak_256.png){width=400px}
 
-![Geometry sets created by blender, rendered in 2048x2048 with 2048 SPP, by GTX 960 in 36 mins.](./Image/small_Set1_2048.jpg){width=400px}
+![Geometry sets created by blender, rendered in 2048x2048 with 2048 SPP, by GTX 960 in 36 mins.](./Image/large_Set1_2048.png){width=400px}
 
 ![sponza lit by sunlight (directional light), rendered in 2400x1600 with 64 SPP, by RTX 2070s in 23 mins.](./Image/small_sponza_64.png){width=400px}
 

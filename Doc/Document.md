@@ -66,6 +66,9 @@ Bidirectional path tracing trace rays from both camera and light, generating a n
 
 Bidirectional method has advantage in rendering effects like caustics. Also it greatly reduce the computation since the vertices are reused multiple times forming new paths rather than trace a new path.
 
+![Images from certain paths from Bidirectional Path Tracing
+The scene features a directional area light and a glass egg in the cornell box, the spread of the directional light is about 25.8 degree. The images are rendered in 400x320, with 8 SPP. camera path length increases from left to right and the total path length increases from top to bottom](./Image/bdpt/bdpt.jpg)
+
 ## 3 Implementation
 
 ### 3.1 Math and Geometry

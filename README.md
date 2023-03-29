@@ -55,6 +55,8 @@ More results of bidirectional method (lower row) comparing to unidirectional met
 
 ![](./Doc/Image/bdpt/bdpt2.jpg)
 
+**Note:** Bidirectional Path Tracing currently only implemented in **CPU** version.
+
 ## Compile and Run
 
 ### Visual Studio
@@ -101,7 +103,7 @@ I extend the original xml file for the following additional info:
     - maxbounce: Max bounce or depth in renderer
     - robustlight: Enable light to be intersect with larger tollerance
     - type: Type of integrator 'whitted' | 'mc' | 'bdpt'
-      - clamp: Clamp settings, clamp each samples to suppress fireflies 
+      = clamp: Clamp settings, clamp each samples to suppress fireflies 
 -->
 <integrator spp="256" mis="false" maxbounce="8" robustlight="false" type="mc">
   <clamp min="0.0" max="1000.0" />

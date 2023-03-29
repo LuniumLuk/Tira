@@ -13,7 +13,7 @@
     - maxbounce: Max bounce or depth in renderer
     - robustlight: Enable light to be intersect with larger tollerance
     - type: Type of integrator 'whitted' | 'mc' | 'bdpt'
-      - clamp: Clamp settings, clamp each samples to suppress fireflies 
+      = clamp: Clamp settings, clamp each samples to suppress fireflies 
 -->
 <integrator spp="256" mis="false" maxbounce="8" robustlight="false" type="mc">
   <clamp min="0.0" max="1000.0" />

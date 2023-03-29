@@ -1,13 +1,13 @@
 # Monte Carlo Path Tracer
 
-<div style="text-align: center;">Ziyi Lu</div>
+Ziyi Lu | 22221137 | ziyilu@zju.edu.cn
 
 <!--
 to compile by pandoc:
 pandoc Document.md -o Document.pdf -f markdown+implicit_figures+link_attributes
 -->
 
-Course Project of *Advanced Computer Graphics——Realistic Image Synthesis Winter Semester 2022* [\[Course Page\]](http://10.76.1.181/courses/graphics/2022/)
+This is the document of Course Project of *Advanced Computer Graphics——Realistic Image Synthesis Winter Semester 2022*
 
 1. [Abstract](Document.md#1-abstract)
 2. [Theory](Document.md#2-theory)
@@ -16,7 +16,7 @@ Course Project of *Advanced Computer Graphics——Realistic Image Synthesis Win
 
 ## 1 Abstract
 
-This project (**Tira**, short for Tiny ray tracer) is a tiny physically based renderer that features **Monte Carlo Path Tracer**. The core functionalities of this project include basic ray tracing utilities, acceleration structures, material apperances, integrators. Both CPU multi-thread and GPU (OpenGL compute shader) versions are implemented.
+This project (**Tira**, short for Tiny ray tracer) is a tiny physically based renderer that features **Monte Carlo Path Tracer**. The work includes math & geometry utilities, acceleration structures, materials, path tracing algorithms. This project is developed with C++ and **OpenMP** for CPU multi-thread acceleration and **OpenGL** for GPU compute shader acceleration.
 
 ## 2 Theory
 
@@ -49,7 +49,7 @@ Li(p, wo):
         Return Li(q, -wi) * brdf * cosine / pdf(wi)
 ```
 
-By evaluating Monte-Carlo estimator, we are able to converge the final result nonbiasly by sampling a large number of paths each pixel.
+By evaluating Monte-Carlo estimator, we are able to converge the final result nonbiasly and reduce variance by sampling a large number of paths each pixel.
 
 ### 2.2 Multiple Importance Sampling
 
@@ -67,9 +67,9 @@ The MIS is used in Monte-Carlo path tracing for sampling area light and sampling
 
 ### 2.3 Bidirectional Path Tracing
 
-Bidirectional path tracing trace rays from both camera and light, generating a number of vertices (intersection) with certain probabilities. The bidirectional method then connect these vertices forming a number of paths that contribute to camera with certain PDF. By MIS, we are able to combine these paths together.
+Bidirectional path tracing trace rays from both camera and light, generating a number of vertices (intersection) with certain probabilities. The bidirectional method then connect these vertices forming a number of paths (*Figure 1*) that contribute to film (image) with certain PDF. By MIS, we are able to combine these paths together.
 
-Bidirectional method has advantage in rendering effects like caustics. Also it greatly reduce the computation since the vertices are reused multiple times forming new paths rather than trace a new path.
+Bidirectional method has advantage in rendering effects like caustics (*Figure 2, 3*). Also it boosts the computation since the vertices are reused multiple times forming new paths rather than trace a new path.
 
 ![Images from certain paths from Bidirectional Path Tracing. The scene features a directional area light and a glass egg in cornell box, the spread of the directional light is about 25.8 degree. The images are rendered in 400x320, with 8 SPP. Camera path length increases from left to right and the total path length increases from top to bottom.](./Image/bdpt/bdpt0.jpg){width=400px}
 
@@ -83,13 +83,13 @@ Bidirectional method has advantage in rendering effects like caustics. Also it g
 
 I implemented simple vectors and matrices in column major. I tried SIMD accleration, but have not seen significance in performance improvement. The SIMD option is turned off by default.
 
-In geometry part, I implemented ray-triangle, ray-sphere, ray-AABB intersection. 
+In geometry part, I implemented ray-triangle, ray-sphere, ray-AABB intersection.
 
 ### 3.2 Scene
 
 To load the provided scene, I use thirdparty liberaries like `tinyobjloader`, `stb` and `pugixml`.
 
-To correctly load the official scene, the `tinyobjloader` has to be modified in order to load `Tr` as transmittance (with 3 components) correctly.
+To correctly load the course scene, I moditied the `tinyobjloader` in order to load `Tr` as transmittance (with 3 components) correctly.
 
 Also, for convenience, I extended the xml file so as to load additional parameters as follows:
 
@@ -124,22 +124,22 @@ I implemented two acceleration structures (BVH and Octree) and use BVH by defaul
 
 The **BVH** is partitioned by SAH (surface area heuristics). I do SAH search for all three axes. To avoid taking too much time building BVH, it takes fixed steps on each axes so as to reduce the total search time from $O(N\log N)$ to $O(N)$.
 
-The **octree** only out performs the BVH w/o SAH for certain scenes, therefore is turned of by default.
+The **octree** only out performs the BVH w/o SAH for certain scenes, therefore is turned off by default.
 
 ### 3.5 Integrator
 
-The Integrator sturct is an abstraction of the process of integrating the rendering equation to output realistic images. To implement certain path tracing algorithm, override the `get_pixel_color` function and here is its declaration:
+The Integrator class is an abstraction of the process of solving the rendering equation by Monte-Carlo integration to generate a realistic image. To implement certain path tracing algorithm, override the `get_pixel_color` function and here is its declaration:
 
 ```c++
 virtual float3 get_pixel_color(
     int x, int y, int sample_id, Scene const& scene) = 0;
 ```
 
-`x` and `y` are pixel coordinates, `sample_id` is used for random generator seed, and `scene` provided everything needed for integrating the rendering equation.
+`x` and `y` are pixel coordinates, `sample_id` is used for random generator, and `scene` provided everything needed for integrating the rendering equation.
 
 There are three integrator implementated:
 
-1. Whitted style path tracer (took reference from *pbrt*)
+1. Whitted style path tracer
 2. Monte Carlo path tracer (unidirectional)
 3. Bidirectional path tracer
 
@@ -151,13 +151,13 @@ Tira supports three types of lighting:
 - Directional lighting (sun light)
 - Envmap lighting
 
-**Area lights** are load together with the scene. Objects with non-zero emission are regarded as area lights. All area lights are hittable and will be processed during the path tracing.
+**Area lights** are load together with the scene. Objects with non-zero emission are regarded as area lights. All area lights are hittable objects. Also, the spread of the area light can also be adjusted by measure of solid angle via XML extension.
 
-**Directional light** can be added to the scene via XML extension. Only one directional light (sun light) for each scene. The solid angle of directional light is also configurable, larger solid angle makes softer shadow and less noise.
+**Directional light** can be added to the scene via XML extension. Only one directional light (sun light) can be added for each scene. The solid angle of directional light is also configurable, larger solid angle makes softer shadow and less noise.
 
-**Envmap light** can also be added by XML extension. Currently support only equirectangular envmaps in exr extension are supported. The envmap will be preprocessed to get a 16x16 lookup table for the probabilities of each region to sample for the region of higher radiance.
+**Envmap light** can also be added by XML extension. Currently support only equirectangular envmaps in exr extension are supported. The envmap will be preprocessed to get a 16x16 lookup table for the probabilities of each region to sample for the region of higher radiance. An example of envmap lighting at *Figure 4*.
 
-![Utah teapot lit by envmap (blender `studio.exr`), rendered in 2048x2048 with 4096 SPP, by RTX 2070s in 48 mins.](./Image/large_teapot_4096.png){width=400px}
+![Utah teapot lit by envmap (blender `studio.exr`), rendered in 2048x2048 with 4096 SPP, by RTX 2070s in 48 mins.](./Image/large_teapot_4096.png){width=320px}
 
 ### 3.7 GPU Acceleration
 
@@ -173,7 +173,7 @@ All the images in this document is compressed, **for images in original size and
 
 The following session I will demonstrate some images rendered by this renderer. Most of them are rendered with GPU version, which is identical to CPU version given the same size and samples.
 
-For the default scenes provided in the course page, I doubled the image size to get better results.
+For the default scenes provided in the course page, I doubled the image size to get better results, see *Figure 5~7*.
 
 ![cornell-box, rendered in 2048x2048 with 4096 SPP, by RTX 2070s in 41 mins.](./Image/large_cornell-box_4096.png){width=400px}
 
@@ -183,7 +183,7 @@ For the default scenes provided in the course page, I doubled the image size to 
 
 ### 4.2 Other scenes
 
-For my own scenes, I select some of the representative ones that each demonstrates some of the features of my renderer.
+For my own scenes, I select some of the representative ones that each demonstrates some of the features of my renderer, see *Figure 8~12*.
 
 ![Test orbs by Yasutoshi Mori, a demonstration of pure diffuse, glossy metallic and colored glass materials respectively. The picture is rendered in 1600x1200 with 256 SPP in 5.6 hours by RTX 2070s.](./Image/large_orbs_256.png){width=400px}
 
@@ -192,6 +192,8 @@ For my own scenes, I select some of the representative ones that each demonstrat
 ![Geometry sets created by blender, rendered in 2048x2048 with 2048 SPP, by GTX 960 in 36 mins.](./Image/large_Set1_2048.png){width=400px}
 
 ![sponza lit by sunlight (directional light), rendered in 1200x800 with 256 SPP, by RTX 2070s in 3.3 hours.](./Image/large_sponza-crytek_256.png){width=400px}
+
+![Glass egg in cornell box with directional light, using Bidirectional Path Tracing, rendered in 1600x1280 with 256 SPP, by Intel i7-10875H in 2.4 hours.](./Image/large_CornellBox-Egg_512.png){width=400px}
 
 ## Reference
 

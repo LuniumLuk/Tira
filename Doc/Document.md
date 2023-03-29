@@ -191,7 +191,7 @@ For my own scenes, I select some of the representative ones that each demonstrat
 
 ![Geometry sets created by blender, rendered in 2048x2048 with 2048 SPP, by GTX 960 in 36 mins.](./Image/large_Set1_2048.png){width=400px}
 
-![sponza lit by sunlight (directional light), rendered in 2400x1600 with 64 SPP, by RTX 2070s in 23 mins.](./Image/small_sponza_64.png){width=400px}
+![sponza lit by sunlight (directional light), rendered in 1200x800 with 256 SPP, by RTX 2070s in 3.3 hours.](./Image/large_sponza-crytek_256.png){width=400px}
 
 ## Reference
 

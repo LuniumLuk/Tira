@@ -15,10 +15,10 @@ namespace tira {
         Sphere() {}
         virtual ~Sphere() {}
 
-        float radius;
+        float radius = 0.0f;
         float3 center;
         Bound3f bound;
-        float area;
+        float area = 0.0f;
 
         virtual void intersect(Ray const& ray, Intersection& isect) const override {
             float3 oc = ray.origin - center;

@@ -13,15 +13,10 @@ namespace tira {
         float3 L = float3::zero();
         float3 attenuation = float3::one();
 
-        auto const& u = poisson_disk[sample_id % POISSON_POINTS_NUM];
-        // Pinhole camera model.
-        auto ray = scene.camera.get_ray_pinhole(x, y, scene.scr_w, scene.scr_h, u);
+        auto const& u0 = poisson_disk[sample_id % POISSON_POINTS_NUM];
+        auto const& u1 = concentric_sample_dist(random_float2());
 
-        // // Thin lens camera model.
-        // scene.camera.focus_length = 4.f;
-        // scene.camera.aperature = .1f;
-        // auto u1 = random_float2() - .5f;
-        // auto ray = scene.camera.get_ray_thin_lens(x, y, scene.scr_w, scene.scr_h, u0, u1);
+        auto ray = scene.camera.get_ray(x, y, scene.scr_w, scene.scr_h, u0, u1);
 
         int depth = 0;
 #ifdef USE_RUSSIAN_ROULETTE

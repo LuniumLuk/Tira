@@ -278,20 +278,34 @@ namespace tira {
             camera.fov = deg2rad(fov);
             camera.aspect = (float)scr_w / scr_h;
 
-            auto eye = node.child("eye");
+            auto const& eye = node.child("eye");
             camera.eye.x = eye.attribute("x").as_float() * scene_scale;
             camera.eye.y = eye.attribute("y").as_float() * scene_scale;
             camera.eye.z = eye.attribute("z").as_float() * scene_scale;
 
-            auto at = node.child("lookat");
+            auto const& at = node.child("lookat");
             camera.at.x = at.attribute("x").as_float() * scene_scale;
             camera.at.y = at.attribute("y").as_float() * scene_scale;
             camera.at.z = at.attribute("z").as_float() * scene_scale;
 
-            auto up = node.child("up");
+            auto const& up = node.child("up");
             camera.up.x = up.attribute("x").as_float();
             camera.up.y = up.attribute("y").as_float();
             camera.up.z = up.attribute("z").as_float();
+
+            if (!node.child("thinlens").empty()) {
+                auto const& thinlens = node.child("thinlens");
+                REQUIRED_ATTRIBUTE(thinlens, "focus");
+                REQUIRED_ATTRIBUTE(thinlens, "aperature");
+
+                camera.mode = Camera::CameraMode::ThinLens;
+                camera.focus_length = thinlens.attribute("focus").as_float();
+                camera.aperature = thinlens.attribute("aperature").as_float();
+                std::cout << "[Tira] Using thin lens camera\n";
+            }
+            else {
+                std::cout << "[Tira] Using pinhole camera\n";
+            }
         }
 
         // Load extra material specs.

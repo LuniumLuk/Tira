@@ -51,12 +51,12 @@ namespace tira {
         Timer timer;
         std::vector<Object*> lights;
         std::vector<float> lights_cdf;
-        float lights_total_area;
-        float scene_scale = 1.f;
+        float lights_total_area = 0.0f;
+        float scene_scale = 1.0f;
         IntegratorInfo integrator_info;
         TilingInfo kernel_info;
         bool directional_area_light = false;
-        float directional_area_light_solid_angle = 0.1;
+        float directional_area_light_solid_angle = 0.1f;
 
         enum struct AcceleratorType {
             BVH,
@@ -68,13 +68,10 @@ namespace tira {
             DisneyBSDF,
         };
 
-        Scene() {};
-        ~Scene();
-
         AcceleratorType accel_type = AcceleratorType::BVH;
         Camera camera;
         float4x4 model = float4x4::identity();
-        Accelerator* accel;
+        Accelerator* accel = nullptr;
         std::vector<Material*> materials;
 
         /// Envmap ///
@@ -88,6 +85,8 @@ namespace tira {
         float sun_solid_angle = 6.87e-2f;
         float3 sun_radiance = { 50.f };
 
+        Scene() {};
+        ~Scene();
 
         float3 sample_sun(float3 const& P, float3 const& N, float3& wi, float& pdf, float& geom) const;
         float3 sample_envmap(float3 const& P, float3 const& N, float3& wi, float& pdf, float& geom) const;

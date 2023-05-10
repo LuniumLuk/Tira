@@ -22,9 +22,6 @@ namespace tira {
     }
 
     struct Triangle : Object {
-        Triangle() {}
-        virtual ~Triangle() {}
-
         float3 pos[3];
         float3 normal;
         float3 center;
@@ -36,7 +33,10 @@ namespace tira {
         Bound3f bound;
         bool has_vn = false;
         bool has_vt = false;
-        float area;
+        float area = 0.0f;
+
+        Triangle() {}
+        virtual ~Triangle() {}
 
         virtual void intersect(Ray const& ray, Intersection& isect) const override {
             auto pvec = ray.direction.cross(e02);

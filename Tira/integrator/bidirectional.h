@@ -20,7 +20,7 @@ namespace tira {
             float3 wi;
             float3 wo;
             float pdf = 1.0f;
-            float geom;
+            float geom = 0.0f;
             Material* material = nullptr;
             float3 attenuation;
             bool is_delta = false;

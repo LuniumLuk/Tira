@@ -10,9 +10,10 @@ namespace tira {
 
     float3 BidirectionalIntegrator::get_pixel_color(int x, int y, int sample_id, Scene const& scene) {
         // [TODO] Use Spectrum struct to represent light.
-        auto const& u = poisson_disk[sample_id % POISSON_POINTS_NUM];
+        auto const& u0 = poisson_disk[sample_id % POISSON_POINTS_NUM];
+        auto const& u1 = concentric_sample_dist(random_float2());
 
-        Ray camera_ray = scene.camera.get_ray_pinhole(x, y, scene.scr_w, scene.scr_h, u);
+        Ray camera_ray = scene.camera.get_ray(x, y, scene.scr_w, scene.scr_h, u0, u1);
         camera_ray.depth = max_depth;
 
         // MIS weights and L per depth.

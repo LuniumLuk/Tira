@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <camera type="perspective" width="512" height="512" fovy="40">
-	<eye x="0.0" y="1.0" z="3.6"/> 
-	<lookat x="0.0" y="1.0" z="0.0"/> 
-	<up x="0.0" y="1.0" z="0.0"/> 
+  <eye x="0.0" y="1.0" z="3.6"/> 
+  <lookat x="0.0" y="1.0" z="0.0"/> 
+  <up x="0.0" y="1.0" z="0.0"/> 
+  <thinlens focus="3.6" aperature="0.1" />
 </camera>
 <light mtlname="light" radiance="34.0, 24.0, 8.0"/>
 
@@ -32,7 +33,7 @@
     - scale: Scale of envmap intensity
 -->
 <!--
-	<envmap url="asset/envmap/indoor.exr" scale="1.0" />
+  <envmap url="asset/envmap/indoor.exr" scale="1.0" />
 -->
 <!-- 
   Sunlight settings:
@@ -41,7 +42,7 @@
     - solidangle: Sun solid angle
 -->
 <!--
-	<sunlight direction="0.8, 1.0, -0.5" radiance="20, 20, 20" solidangle="0.0687" />
+  <sunlight direction="0.8, 1.0, -0.5" radiance="20, 20, 20" solidangle="0.0687" />
 -->
 <!-- 
   Sphere primitive (Currently only available in CPU version):
@@ -50,7 +51,7 @@
     - radius: Sphere radius (in world coordinates)
 -->
 <!-- 
-	<sphere mtlname="material_0" center="0.0, 1.0, 1.0" radius="0.1" />
+  <sphere mtlname="material_0" center="0.0, 1.0, 1.0" radius="0.1" />
 -->
 <!-- 
   GPU compute shader kernel settings:

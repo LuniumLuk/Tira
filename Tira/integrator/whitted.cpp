@@ -10,8 +10,11 @@ namespace tira {
         float3 L = float3::zero();
         float3 attenuation = float3::one();
 
-        auto const& u = poisson_disk[sample_id % POISSON_POINTS_NUM];
-        auto ray = scene.camera.get_ray_pinhole(x, y, scene.scr_w, scene.scr_h, u);
+        auto const& u0 = poisson_disk[sample_id % POISSON_POINTS_NUM];
+        auto const& u1 = concentric_sample_dist(random_float2());
+
+        auto ray = scene.camera.get_ray(x, y, scene.scr_w, scene.scr_h, u0, u1);
+
         Intersection isect, light_isect;
         float3 Li;
         float3 wi, wo, f;

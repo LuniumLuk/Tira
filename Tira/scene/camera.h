@@ -10,6 +10,12 @@
 namespace tira {
 
     struct Camera {
+
+        enum struct CameraMode {
+            Pinhole,
+            ThinLens,
+        };
+
         Camera() {}
         Camera(float3 const& _eye
             , float3 const& _at
@@ -28,11 +34,15 @@ namespace tira {
         void rotate(float2 const& pitchYaw);
         void move(float2 const& movement);
 
+        Ray get_ray(int x, int y, int w, int h, float2 const& u0, float2 const& u1 = float2::zero()) const;
+
         Ray get_ray_pinhole(int x, int y, int w, int h, float2 const& u0) const;
         Ray get_ray_thin_lens(int x, int y, int w, int h, float2 const& u0, float2 const& u1) const;
 
         float3x3 get_screen_to_raster() const;
         float3x3 get_raster_to_screen() const;
+
+        CameraMode mode = CameraMode::Pinhole;
 
         float3 eye = { 0,  0, -1 };
         float3 at = { 0,  0,  0 };
@@ -107,6 +117,17 @@ namespace tira {
     inline  float3x3 Camera::get_raster_to_screen() const {
         return get_screen_to_raster().inversed();
     }
+
+    inline Ray Camera::get_ray(int x, int y, int w, int h, float2 const& u0, float2 const& u1) const {
+        switch (mode) {
+        case CameraMode::Pinhole:
+            return get_ray_pinhole(x, y, w, h, u0); break;
+        case CameraMode::ThinLens:
+            return get_ray_thin_lens(x, y, w, h, u0, u1); break;
+        }
+        return get_ray_pinhole(x, y, w, h, u0);
+    }
+
 
     inline Ray Camera::get_ray_pinhole(int x, int y, int w, int h, float2 const& u0) const {
         auto u = (itof(x) + u0.x) / w * 2 - 1;

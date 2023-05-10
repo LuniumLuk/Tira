@@ -186,7 +186,7 @@ namespace tira {
     }
 
     struct Object {
-        Material* material;
+        Material* material = nullptr;
 
         Object() {}
         virtual ~Object() {}

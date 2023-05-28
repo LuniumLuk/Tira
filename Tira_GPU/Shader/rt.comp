@@ -511,8 +511,8 @@ void sampleSun(in vec3 P, in vec3 N, inout Intersection isect, inout vec3 wi, in
 }
 
 void sampleEnvmap(in vec3 P, in vec3 N, inout Intersection isect, inout vec3 wi, inout float pdf, inout float visibility) {
-    vec2 u = vec2(rand(), rand());
 #ifdef SAMPLE_ENVMAP_WITH_HEMISPHERE
+    vec2 u = vec2(rand(), rand());
     vec3 dir = sampleUnitHemisphere(u);
     wi = normalize(localToWorld(dir, N));
     pdf = INV_TWO_PI;
@@ -810,6 +810,7 @@ vec3 calculateDirectLight(in int type, in int depth, in Ray ray, in Intersection
     ivec2 misHeuristics = misSampleCountHeuristics(bMaterials[isect.material], wo, isect.normal);
     lightSampleCount = misHeuristics.x;
     brdfSampleCount = misHeuristics.y;
+    if (type == SAMPLE_ENVMAP) lightSampleCount *= 32;
 #endif
 
     vec3 Li;

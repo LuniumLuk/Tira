@@ -27,7 +27,8 @@
 #define USE_TILING
 #define MAX_MATERIAL_TEXTURE_COUNT 30
 
-std::string sceneName = "CornellBox-Original";
+//std::string sceneName = "CornellBox-Original";
+std::string sceneName = "Set0";
 std::string generateOutputFilename(int SPP);
 std::string generateShaderMacros(bool useMIS, bool acceptIntersectionCloseToLight, int textureCount, std::string const& additional);
 int maxDepth = 8;

@@ -176,6 +176,13 @@ namespace tira {
             break;
             }
         }
+        auto missing_material = new BlinnPhongMaterial{};
+        missing_material->diffuse = { .0f, 1.f, .0f };
+        missing_material->specular = { .0f };
+        missing_material->ior = 1.f;
+        missing_material->shininess = 0.f;
+        missing_material->name = "Missing";
+        materials.push_back(static_cast<Material*>(missing_material));
 
         std::vector<Object*> objects;
 
@@ -216,6 +223,9 @@ namespace tira {
                 index_offset += fv;
 
                 auto material_id = shapes[s].mesh.material_ids[f];
+                if (material_id < 0) {
+                    material_id = materials.size() - 1;
+                }
                 triangle->material = materials[material_id];
 
                 triangle->calc_center();
